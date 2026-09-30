@@ -2,11 +2,12 @@ package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.model.Movie;
-import com.kodebutikken.kinoxp.model.MovieStatus;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MovieService {
@@ -35,7 +36,7 @@ public class MovieService {
         //Tilføjet genre og status
         movie.setMovieGenre(movieForm.movieGenre());
         //Sætter nye film til aktiv
-        movie.setMovieStatus(MovieStatus.ACTIVE);
+        movie.setActive(true);
 
         return movieRepository.save(movie);
     }
@@ -68,7 +69,7 @@ public class MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(()-> new IllegalArgumentException("Movie with the id " + id +
                         " does not exist"));
-        if(movie.getMovieStatus() != MovieStatus.INACTIVE){
+        if(movie.isActive()){
             throw new IllegalArgumentException("Only inactive movies can be deleted");
         }
         showingRepository.deleteByMovieId(id);
@@ -109,10 +110,11 @@ public class MovieService {
         return null;
     }
 
-    public void changeMovieStatus (Long id, MovieStatus movieStatus){
+    public Movie changeMovieStatus (Long id, boolean active){
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("Movie with id " + id + " don't exist"));
-        movie.setMovieStatus(movieStatus);
-        movieRepository.save(movie);
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with id "
+                        + id + " does not exist"));
+        movie.setActive(active);
+        return movieRepository.save(movie);
     }
 }

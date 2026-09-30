@@ -22,7 +22,6 @@ public class Movie {
     @Enumerated(EnumType.STRING)
     private MovieGenre movieGenre;
 
-    @Enumerated(EnumType.STRING)
-    private MovieStatus movieStatus;
+    private boolean active;
 
 }

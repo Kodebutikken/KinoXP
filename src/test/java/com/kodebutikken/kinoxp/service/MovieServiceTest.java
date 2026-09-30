@@ -3,7 +3,6 @@ package com.kodebutikken.kinoxp.service;
 import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
-import com.kodebutikken.kinoxp.model.MovieStatus;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.awt.*;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,14 +48,14 @@ class MovieServiceTest {
         assertEquals(0, capturedMovie.getAgeLimit());
         assertEquals("Ren action", capturedMovie.getDescription());
         assertEquals(MovieGenre.ACTION, capturedMovie.getMovieGenre());
-        assertEquals(MovieStatus.ACTIVE, capturedMovie.getMovieStatus());
+        assertEquals(true, capturedMovie.isActive());
     }
 
     @Test
     void updateMovie_success() {
         Long movieId = 1L;
         Movie existingMovie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, MovieStatus.ACTIVE);
+                MovieGenre.ACTION, true);
         MovieForm movieForm = new MovieForm("Batman Returns", 126, 18,
                 "Mere action", MovieGenre.THRILLER);
 
@@ -73,7 +71,7 @@ class MovieServiceTest {
         assertEquals(18, capturedMovie.getAgeLimit());
         assertEquals("Mere action", capturedMovie.getDescription());
         assertEquals(MovieGenre.THRILLER, capturedMovie.getMovieGenre());
-        assertEquals(MovieStatus.ACTIVE, capturedMovie.getMovieStatus());
+        assertEquals(true, capturedMovie.isActive());
     }
 
     //DELETE
@@ -81,7 +79,7 @@ class MovieServiceTest {
     void deleteMovie_shouldDeleteMovieAndShowings_whenMovieIsInactive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, MovieStatus.INACTIVE);
+                MovieGenre.ACTION, false);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -95,7 +93,7 @@ class MovieServiceTest {
     void deleteMovie_shouldThrow_whenMovieIsActive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, MovieStatus.ACTIVE);
+                MovieGenre.ACTION, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -120,29 +118,29 @@ class MovieServiceTest {
     @Test
     void changeMovieStatus_shouldDeactivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, MovieStatus.ACTIVE);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
-        movieService.changeMovieStatus(movieId, MovieStatus.INACTIVE);
+        movieService.changeMovieStatus(movieId, false);
 
         ArgumentCaptor<Movie> movieCaptor = ArgumentCaptor.forClass(Movie.class);
         verify(movieRepository).save(movieCaptor.capture());
-        assertEquals(MovieStatus.INACTIVE, movieCaptor.getValue().getMovieStatus());
+        assertFalse(movieCaptor.getValue().isActive());
     }
 
     @Test
     void changeMovieStatus_shouldActivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, MovieStatus.INACTIVE);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, false);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
-        movieService.changeMovieStatus(movieId, MovieStatus.ACTIVE);
+        movieService.changeMovieStatus(movieId, true);
 
         ArgumentCaptor<Movie> movieCaptor = ArgumentCaptor.forClass(Movie.class);
         verify(movieRepository).save(movieCaptor.capture());
-        assertEquals(MovieStatus.ACTIVE, movieCaptor.getValue().getMovieStatus());
+        assertTrue(movieCaptor.getValue().isActive());
     }
 
     @Test
@@ -152,7 +150,7 @@ class MovieServiceTest {
         when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
 
         assertThrows(IllegalArgumentException.class,
-                () -> movieService.changeMovieStatus(movieId, MovieStatus.INACTIVE));
+                () -> movieService.changeMovieStatus(movieId, false));
 
         verify(movieRepository, never()).save(any());
     }

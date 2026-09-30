@@ -2,7 +2,7 @@ package com.kodebutikken.kinoxp.controller;
 
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
-import com.kodebutikken.kinoxp.model.MovieStatus;
+import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.service.MovieService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -56,13 +56,9 @@ public class MovieController {
     }
 
     @PostMapping("/{id}/status")
-    public ResponseEntity<String> changeMovieStatus(@PathVariable Long id, @RequestParam MovieStatus status){
-        try{
-            movieService.changeMovieStatus(id, status);
-            return ResponseEntity.ok("The movie status is now: " + status);
-        }catch(IllegalArgumentException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Movie> changeMovieStatus(@PathVariable Long id, @RequestParam boolean active){
+            Movie movie = movieService.changeMovieStatus(id, active);
+            return ResponseEntity.ok(movie);
     }
 }
 
