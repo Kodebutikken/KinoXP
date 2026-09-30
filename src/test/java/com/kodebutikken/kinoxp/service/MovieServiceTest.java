@@ -3,6 +3,7 @@ package com.kodebutikken.kinoxp.service;
 import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
+import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +19,9 @@ class MovieServiceTest {
 
     @Mock
     private MovieRepository movieRepository;
+
+    @Mock
+    private ShowingRepository showingRepository;
 
     @InjectMocks
     private MovieService movieService;
@@ -39,5 +43,17 @@ class MovieServiceTest {
         assertEquals(155, capturedMovie.getDurationMinutes());
         assertEquals(0, capturedMovie.getAgeLimit());
         assertEquals("Ren action", capturedMovie.getDescription());
+    }
+
+    @Test
+    void deleteMovie_shouldDeleteMovieAndShowings_whenMovieExists() {
+        Long movieId = 1L;
+
+        when(movieRepository.existsById(movieId)).thenReturn(true);
+
+        movieService.deleteMovie(movieId);
+
+        verify(showingRepository).deleteByMovieId(movieId);
+        verify(movieRepository).deleteById(movieId);
     }
 }

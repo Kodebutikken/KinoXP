@@ -6,10 +6,7 @@ import com.kodebutikken.kinoxp.service.MovieService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/movies")
@@ -33,6 +30,15 @@ public class MovieController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-}
 
+    @PostMapping("/{id}/delete")
+    public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
+        try {
+            movieService.deleteMovie(id);
+            return ResponseEntity.ok("FILMEN BLEVET SLETTET");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+}
 
