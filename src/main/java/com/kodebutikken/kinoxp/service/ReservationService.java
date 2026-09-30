@@ -1,11 +1,10 @@
 package com.kodebutikken.kinoxp.service;
 
+import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.Reservation;
 import com.kodebutikken.kinoxp.repository.ReservationRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ReservationService {
@@ -21,7 +20,7 @@ public class ReservationService {
 
     public Reservation createReservation(Reservation reservation) {
         if (!showingRepository.existsById(reservation.getShowingId())) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Showing not found");
+            throw new ShowingNotFoundException("Showing not found: " + reservation.getShowingId());
         }
         return reservationRepository.save(reservation);
     }

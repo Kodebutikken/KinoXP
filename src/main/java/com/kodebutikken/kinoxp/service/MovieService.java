@@ -1,6 +1,7 @@
 package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
@@ -44,7 +45,7 @@ public class MovieService {
         }
 
         Movie existingMovie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Film med id " + id + " findes ikke"));
+                .orElseThrow(() -> new MovieNotFoundException("Film med id " + id + " findes ikke"));
         existingMovie.setTitle(movieForm.title().trim());
         existingMovie.setDurationMinutes(movieForm.durationMinutes());
         existingMovie.setAgeLimit(movieForm.ageLimit());
@@ -56,7 +57,7 @@ public class MovieService {
     @Transactional
     public void deleteMovie(Long id) {
         if (!movieRepository.existsById(id)) {
-            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
+            throw new MovieNotFoundException("Film med id " + id + " findes ikke");
         }
 
         // Slet alle showings for filmen, før filmen slettes (ved sku ikke om vi skal slette showings, men det gør vi nu.)
