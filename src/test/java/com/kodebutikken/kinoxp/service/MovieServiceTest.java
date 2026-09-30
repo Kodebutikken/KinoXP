@@ -1,6 +1,7 @@
 package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
@@ -48,7 +49,19 @@ class MovieServiceTest {
         assertEquals(0, capturedMovie.getAgeLimit());
         assertEquals("Ren action", capturedMovie.getDescription());
         assertEquals(MovieGenre.ACTION, capturedMovie.getMovieGenre());
-        assertEquals(true, capturedMovie.isActive());
+        assertTrue(capturedMovie.isActive());
+    }
+
+    @Test
+    void deleteMovie_shouldNotDeleteMovie_whenMovieDoesNotExist() {
+        Long movieId = 1L;
+
+        when(movieRepository.existsById(movieId)).thenReturn(false);
+
+        assertThrows(MovieNotFoundException.class, () -> movieService.deleteMovie(movieId));
+
+        verify(showingRepository, never()).deleteByMovieId(anyLong());
+        verify(movieRepository, never()).deleteById(anyLong());
     }
 
     @Test
@@ -71,7 +84,7 @@ class MovieServiceTest {
         assertEquals(18, capturedMovie.getAgeLimit());
         assertEquals("Mere action", capturedMovie.getDescription());
         assertEquals(MovieGenre.THRILLER, capturedMovie.getMovieGenre());
-        assertEquals(true, capturedMovie.isActive());
+        assertTrue(capturedMovie.isActive());
     }
 
     //DELETE

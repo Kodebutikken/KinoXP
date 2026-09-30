@@ -1,13 +1,12 @@
 package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MovieService {
@@ -51,7 +50,7 @@ public class MovieService {
         }
 
         Movie existingMovie = movieRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Film med id " + id + " findes ikke"));
+                .orElseThrow(() -> new MovieNotFoundException("Film med id " + id + " findes ikke"));
         existingMovie.setTitle(movieForm.title().trim());
         existingMovie.setDurationMinutes(movieForm.durationMinutes());
         existingMovie.setAgeLimit(movieForm.ageLimit());
@@ -67,14 +66,13 @@ public class MovieService {
     public void deleteMovie(Long id) {
         //Ændret så kun film der er inaktive kan slettes
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("Movie with the id " + id +
+                .orElseThrow(() -> new MovieNotFoundException("Movie with the id " + id +
                         " does not exist"));
-        if(movie.isActive()){
+        if (movie.isActive()) {
             throw new IllegalArgumentException("Only inactive movies can be deleted");
         }
         showingRepository.deleteByMovieId(id);
         movieRepository.deleteById(id);
-
     }
 //        if (!movieRepository.existsById(id)) {
 //            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
@@ -110,9 +108,9 @@ public class MovieService {
         return null;
     }
 
-    public Movie changeMovieStatus (Long id, boolean active){
+    public Movie changeMovieStatus(Long id, boolean active) {
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with id "
+                .orElseThrow(() -> new MovieNotFoundException("Movie with id "
                         + id + " does not exist"));
         movie.setActive(active);
         return movieRepository.save(movie);
