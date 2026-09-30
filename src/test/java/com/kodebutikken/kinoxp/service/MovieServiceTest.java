@@ -11,8 +11,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+//ALT HERINDE ER AI GENERATED
 
 @ExtendWith(MockitoExtension.class)
 class MovieServiceTest {
@@ -55,5 +59,28 @@ class MovieServiceTest {
 
         verify(showingRepository).deleteByMovieId(movieId);
         verify(movieRepository).deleteById(movieId);
+    }
+
+    @Test
+    void updateMovie_success() {
+        Long movieId = 1L;
+        Movie existingMovie = new Movie(movieId, "Batman", 155, 0, "Ren action");
+        MovieForm movieForm = new MovieForm("Batman Returns", 126, 18, "Mere action");
+
+        when(movieRepository.findById(movieId)).thenReturn(Optional.of(existingMovie));
+
+        movieService.updateMovie(movieId, movieForm);
+
+        ArgumentCaptor<Movie> movieCaptor = ArgumentCaptor.forClass(Movie.class);
+
+        verify(movieRepository).save(movieCaptor.capture());
+
+        Movie capturedMovie = movieCaptor.getValue();
+
+        assertEquals(movieId, capturedMovie.getId());
+        assertEquals("Batman Returns", capturedMovie.getTitle());
+        assertEquals(126, capturedMovie.getDurationMinutes());
+        assertEquals(18, capturedMovie.getAgeLimit());
+        assertEquals("Mere action", capturedMovie.getDescription());
     }
 }

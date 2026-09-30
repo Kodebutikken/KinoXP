@@ -18,8 +18,7 @@ public class MovieController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createMovie(@Valid @RequestBody MovieForm movieForm,
-                                         BindingResult bindingResult) {
+    public ResponseEntity<?> createMovie(@Valid @RequestBody MovieForm movieForm, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest()
                     .body(bindingResult.getFieldError().getDefaultMessage());
@@ -36,6 +35,20 @@ public class MovieController {
         try {
             movieService.deleteMovie(id);
             return ResponseEntity.ok("FILMEN BLEVET SLETTET");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/edit")
+    public ResponseEntity<String> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieForm movieForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.badRequest()
+                    .body(bindingResult.getFieldError().getDefaultMessage());
+        }
+        try {
+            movieService.updateMovie(id, movieForm);
+            return ResponseEntity.ok("Filmen er blevet opdateret");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
