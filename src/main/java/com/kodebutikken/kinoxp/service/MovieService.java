@@ -5,7 +5,9 @@ import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MovieService {
@@ -31,6 +33,11 @@ public class MovieService {
         movie.setAgeLimit(movieForm.ageLimit());
         movie.setDescription(movieForm.description());
 
+        //Tilføjet genre og status
+        movie.setMovieGenre(movieForm.movieGenre());
+        //Sætter nye film til aktiv
+        movie.setActive(true);
+
         return movieRepository.save(movie);
     }
 
@@ -50,19 +57,33 @@ public class MovieService {
         existingMovie.setAgeLimit(movieForm.ageLimit());
         existingMovie.setDescription(movieForm.description());
 
+        //Tilføjet at man kan sætte genre
+        existingMovie.setMovieGenre(movieForm.movieGenre());
+
         movieRepository.save(existingMovie);
     }
 
     @Transactional
     public void deleteMovie(Long id) {
-        if (!movieRepository.existsById(id)) {
-            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
+        //Ændret så kun film der er inaktive kan slettes
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(()-> new IllegalArgumentException("Movie with the id " + id +
+                        " does not exist"));
+        if(movie.isActive()){
+            throw new IllegalArgumentException("Only inactive movies can be deleted");
         }
-
-        // Slet alle showings for filmen, før filmen slettes (ved sku ikke om vi skal slette showings, men det gør vi nu.)
         showingRepository.deleteByMovieId(id);
         movieRepository.deleteById(id);
+
     }
+//        if (!movieRepository.existsById(id)) {
+//            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
+//        }
+//
+//        // Slet alle showings for filmen, før filmen slettes (ved sku ikke om vi skal slette showings, men det gør vi nu.)
+//        showingRepository.deleteByMovieId(id);
+//        movieRepository.deleteById(id);
+//    }
 
     //Ved ikke hvad vi gør når en film ikke har en aldersgrænse, så det blev sådan her.
     private String isValidMovieForm(MovieForm movieForm) {
@@ -87,5 +108,13 @@ public class MovieService {
             return "Der findes allerede en film med titlen: " + movieForm.title().trim();
         }
         return null;
+    }
+
+    public Movie changeMovieStatus (Long id, boolean active){
+        Movie movie = movieRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Movie with id "
+                        + id + " does not exist"));
+        movie.setActive(active);
+        return movieRepository.save(movie);
     }
 }
