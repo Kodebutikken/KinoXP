@@ -3,14 +3,18 @@ package com.kodebutikken.kinoxp.service;
 import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
+import com.kodebutikken.kinoxp.repository.ShowingRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
+    private final ShowingRepository showingRepository;
 
-    public MovieService(MovieRepository movieRepository) {
+    public MovieService(MovieRepository movieRepository, ShowingRepository showingRepository) {
         this.movieRepository = movieRepository;
+        this.showingRepository = showingRepository;
     }
 
     public Movie createMovie(MovieForm movieForm) {
@@ -28,6 +32,17 @@ public class MovieService {
         movie.setDescription(movieForm.description());
 
         return movieRepository.save(movie);
+    }
+
+    @Transactional
+    public void deleteMovie(Long id) {
+        if (!movieRepository.existsById(id)) {
+            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
+        }
+
+        // Slet alle showings for filmen, før filmen slettes (ved sku ikke om vi skal slette showings, men det gør vi nu.)
+        showingRepository.deleteByMovieId(id);
+        movieRepository.deleteById(id);
     }
 
     //Ved ikke hvad vi gør når en film ikke har en aldersgrænse, så det blev sådan her.
