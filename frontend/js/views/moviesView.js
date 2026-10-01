@@ -1,4 +1,4 @@
-import { fetchMovies } from "../api/kinoApi";
+import { fetchMovies } from "../api/kinoApi.js";
 
 export async function createMoviesView() {
     const container = document.createElement("section");
@@ -23,9 +23,9 @@ export async function createMoviesView() {
 
     const card = template.content.firstElementChild.cloneNode(true);
 
-    card.querySelector(".title").textContent = movie.title;
+    card.querySelector(".title").textContent = movie.title || "Untitled";
     card.querySelector(".info").textContent =
-        `${movie.duration} min | ${movie.genre}`;
+        `${movie.durationMinutes || '?'} min | ${movie.movieGenre || 'Unknown genre'}`;
     card.querySelector(".link").href = `#/showings?movieId=${movie.id}`;
 
     container.appendChild(card);
