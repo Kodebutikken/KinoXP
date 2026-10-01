@@ -36,7 +36,7 @@ public class MovieController {
     public ResponseEntity<String> deleteMovie(@PathVariable Long id) {
         try {
             movieService.deleteMovie(id);
-            return ResponseEntity.ok("FILMEN BLEVET SLETTET");
+            return ResponseEntity.ok("Movie has been deleted");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -50,7 +50,7 @@ public class MovieController {
         }
         try {
             movieService.updateMovie(id, movieForm);
-            return ResponseEntity.ok("Filmen er blevet opdateret");
+            return ResponseEntity.ok("Movie is updated successfully");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
