@@ -85,10 +85,6 @@ public class MovieService {
 
     //Ved ikke hvad vi gør når en film ikke har en aldersgrænse, så det blev sådan her.
     private String isValidMovieForm(MovieForm movieForm) {
-        if (movieForm.ageLimit() != 0 && movieForm.ageLimit() != 18) {
-            return "Aldersgrænse skal være 0 eller 18";
-        }
-
         //Der ikke må være flere film med samme titel.
         if (movieRepository.existsByTitle(movieForm.title().trim())) {
             return "Der findes allerede en film med titlen: " + movieForm.title().trim();
@@ -98,11 +94,8 @@ public class MovieService {
 
     //KUNNE VÆRE EN DEL AF isValidMovieForm, MEN HAR GJORT SÅDAN HER SÅ VI KAN TJEKKE OM FILMEN ER DEN SAMME SOM VI REDIGERER.
     private String isValidUpdatedMovieForm(Long id, MovieForm movieForm) {
-        if (movieForm.ageLimit() != 0 && movieForm.ageLimit() != 18) {
-            return "Aldersgrænse skal være 0 eller 18";
-        }
         //Titlen må ikke findes på en anden film end den, der redigeres.
-        if (movieRepository.existsByTitleAndId(movieForm.title().trim(), id)) {
+        if (movieRepository.existsByTitleAndIdNot(movieForm.title().trim(), id)) {
             return "Der findes allerede en film med titlen: " + movieForm.title().trim();
         }
         return null;

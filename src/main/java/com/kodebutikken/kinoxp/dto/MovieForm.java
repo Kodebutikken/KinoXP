@@ -1,9 +1,7 @@
 package com.kodebutikken.kinoxp.dto;
 
 import com.kodebutikken.kinoxp.model.MovieGenre;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 
 public record MovieForm(
         @NotBlank(message = "Titel skal udfyldes")
@@ -14,6 +12,8 @@ public record MovieForm(
         Integer durationMinutes,
 
         @NotNull(message = "Aldersgrænse skal udfyldes")
+        @Min(value = 0, message = "Aldersgrænse skal være større end eller lig med 0")
+        @Max(value = 18, message = "Aldersgrænse skal være mindre end eller lig med 18")
         Integer ageLimit,
 
         @NotBlank(message = "Beskrivelse skal udfyldes")
