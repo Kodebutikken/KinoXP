@@ -1,27 +1,41 @@
 package com.kodebutikken.kinoxp.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "showing")
 public class Showing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long movieId;
-    private Long theaterId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "movie_id")
+    private Movie movie;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "theater_id")
+    private Theater theater;
+
     private LocalDateTime startTime;
-    private boolean isExtra;
+
+    @Column(name = "is_extra")
+    private boolean extra;
+
     private String status;
+
+    @ToString.Exclude
+    @OneToMany(mappedBy = "showing")
+    private List<Reservation> reservations = new ArrayList<>();
 }
