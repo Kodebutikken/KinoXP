@@ -19,6 +19,7 @@ public class MovieController {
     }
 
     @PostMapping
+    // ? Fordi den både returnere en String og en Movie
     public ResponseEntity<?> createMovie(@Valid @RequestBody MovieForm movieForm, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest()
