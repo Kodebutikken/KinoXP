@@ -19,8 +19,8 @@ public class ReservationService {
     }
 
     public Reservation createReservation(Reservation reservation) {
-        if (!showingRepository.existsById(reservation.getShowingId())) {
-            throw new ShowingNotFoundException("Showing not found: " + reservation.getShowingId());
+        if (!showingRepository.existsById(reservation.getShowing().getId())) {
+            throw new ShowingNotFoundException("Showing not found: " + reservation.getShowing().getId());
         }
         return reservationRepository.save(reservation);
     }
