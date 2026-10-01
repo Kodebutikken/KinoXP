@@ -6,8 +6,8 @@ export async function fetchMovies() {
     return await request("/movies");
 }
 
-export async function fetchShowings() {
-    return await request("/showings");
+export async function fetchShowings(movieId) {
+    return await request(`/showings/${movieId}`);
 }
 
 async function request(endpoint, options = {}) {

@@ -1,4 +1,10 @@
-const routes = {};
+import { createMoviesView } from "./views/moviesView.js";
+import { createShowingsView } from "./views/showingsView.js";
+
+const routes = {
+    '/movies': { render: createMoviesView },
+    '/showings': { render: createShowingsView },
+};
 
 export function initRouter() {
     window.addEventListener("hashchange", handleRoute);
