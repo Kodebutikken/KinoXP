@@ -20,7 +20,7 @@ public class MovieService {
 
     public Movie createMovie(MovieForm movieForm) {
         if (movieForm == null) {
-            throw new IllegalArgumentException("Ikke være 0");
+            throw new IllegalArgumentException("Cant be 0");
         }
         String validationError = isValidMovieForm(movieForm);
         if (validationError != null) {
@@ -42,7 +42,7 @@ public class MovieService {
 
     public void updateMovie(Long id, MovieForm movieForm) {
         if (movieForm == null) {
-            throw new IllegalArgumentException("Ikke være 0");
+            throw new IllegalArgumentException("Cant be 0");
         }
         String validationError = isValidUpdatedMovieForm(id, movieForm);
         if (validationError != null) {
@@ -50,7 +50,7 @@ public class MovieService {
         }
 
         Movie existingMovie = movieRepository.findById(id)
-                .orElseThrow(() -> new MovieNotFoundException("Film med id " + id + " findes ikke"));
+                .orElseThrow(() -> new MovieNotFoundException("Movie with id " + id + " does not exist"));
         existingMovie.setTitle(movieForm.title().trim());
         existingMovie.setDurationMinutes(movieForm.durationMinutes());
         existingMovie.setAgeLimit(movieForm.ageLimit());
@@ -87,7 +87,7 @@ public class MovieService {
     private String isValidMovieForm(MovieForm movieForm) {
         //Der ikke må være flere film med samme titel.
         if (movieRepository.existsByTitle(movieForm.title().trim())) {
-            return "Der findes allerede en film med titlen: " + movieForm.title().trim();
+            return "There is already a movie with the title: " + movieForm.title().trim();
         }
         return null;
     }
@@ -96,7 +96,7 @@ public class MovieService {
     private String isValidUpdatedMovieForm(Long id, MovieForm movieForm) {
         //Titlen må ikke findes på en anden film end den, der redigeres.
         if (movieRepository.existsByTitleAndIdNot(movieForm.title().trim(), id)) {
-            return "Der findes allerede en film med titlen: " + movieForm.title().trim();
+            return "There is already a movie with the title: " + movieForm.title().trim();
         }
         return null;
     }
