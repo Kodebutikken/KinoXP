@@ -1,6 +1,7 @@
 "use strict";
 
 import { fetchMovies } from "../api/kinoApi.js";
+import { createHomeView } from "./homeView.js";
 
 export async function createHomeView() {
     const container = document.createElement("section");
@@ -20,6 +21,6 @@ export async function createHomeView() {
         const heroBanner = createHeroBanner(featuredMovies);
         container.appendChild(heroBanner);
 
-        const catalogSection =
+
     }
 }

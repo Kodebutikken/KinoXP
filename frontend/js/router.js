@@ -2,6 +2,7 @@ import { createMoviesView } from "./views/moviesView.js";
 import { createShowingsView } from "./views/showingsView.js";
 
 const routes = {
+    '/': { render: createMoviesView },
     '/movies': { render: createMoviesView },
     '/showings': { render: createShowingsView },
 };
