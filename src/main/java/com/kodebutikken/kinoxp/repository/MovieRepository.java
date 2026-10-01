@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MovieRepository  extends JpaRepository<Movie, Long> {
     boolean existsByTitle(String title);
 
-    boolean existsByTitleAndId(String title, Long id);
+    boolean existsByTitleAndIdNot(String title, Long id);
 }
