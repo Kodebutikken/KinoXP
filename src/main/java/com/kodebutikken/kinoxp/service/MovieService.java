@@ -74,14 +74,6 @@ public class MovieService {
         showingRepository.deleteByMovieId(id);
         movieRepository.deleteById(id);
     }
-//        if (!movieRepository.existsById(id)) {
-//            throw new IllegalArgumentException("Film med id " + id + " findes ikke");
-//        }
-//
-//        // Slet alle showings for filmen, før filmen slettes (ved sku ikke om vi skal slette showings, men det gør vi nu.)
-//        showingRepository.deleteByMovieId(id);
-//        movieRepository.deleteById(id);
-//    }
 
     //Ved ikke hvad vi gør når en film ikke har en aldersgrænse, så det blev sådan her.
     private String isValidMovieForm(MovieForm movieForm) {
