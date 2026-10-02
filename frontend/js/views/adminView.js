@@ -2,6 +2,8 @@
 
 import { fetchMovies } from "../api/kinoApi.js";
 import { createNotFoundView } from "./notFoundView.js";
+import { addMovie } from "../api/kinoApi.js";
+import { fetchGenres } from "../api/kinoApi.js";
 
 const SECTIONS = {
     movies: { title: "Movies", render: renderMoviesSection },
@@ -33,6 +35,92 @@ export async function createAdminView({ params }) {
     backLink.setAttribute("data-link", "");
     backLink.textContent = "← Back to admin";
     container.appendChild(backLink);
+
+    const createButton = document.createElement("button");
+    createButton.type = "button";
+    createButton.textContent = "Create new movie";
+    createButton.disabled = false;
+    createButton.addEventListener("click", async () => {
+        const newMovieData = document.createElement("form");
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.name = "title";
+        titleInput.placeholder = "Movie Title";
+        newMovieData.appendChild(titleInput);
+
+        const durationInput = document.createElement("input");
+        durationInput.type = "number";
+        durationInput.name = "duration";
+        durationInput.placeholder = "Duration (minutes)";
+        newMovieData.appendChild(durationInput);
+
+        const ageLimitInput = document.createElement("input");
+        ageLimitInput.type = "number";
+        ageLimitInput.name = "ageLimit";
+        ageLimitInput.placeholder = "Age Limit";
+        newMovieData.appendChild(ageLimitInput);
+
+        const descriptionInput = document.createElement("textarea");
+        descriptionInput.name = "description";
+        descriptionInput.placeholder = "Description";
+        newMovieData.appendChild(descriptionInput);
+
+        const genreInput = document.createElement("select");
+        genreInput.values = await fetchGenres();
+        genreInput.name = "genre";
+        genreInput.placeholder = "Genre";
+        newMovieData.appendChild(genreInput);
+
+        const isActiveInput = document.createElement("input");
+        isActiveInput.type = "checkbox";
+        isActiveInput.name = "isActive";
+        const isActiveLabel = document.createElement("label");
+        isActiveLabel.textContent = "Active";
+        isActiveLabel.appendChild(isActiveInput);
+        newMovieData.appendChild(isActiveLabel);
+
+        const submitButton = document.createElement("button");
+        submitButton.type = "submit";
+        submitButton.textContent = "Create Movie";
+        newMovieData.appendChild(submitButton);
+
+        container.innerHTML = ""; // Clear existing content
+        container.appendChild(heading);
+        container.appendChild(backLink);
+        container.appendChild(newMovieData);
+
+        newMovieData.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(newMovieData);
+            const movieData = {
+                title: formData.get("title"),
+                durationMinutes: parseInt(formData.get("duration"), 10),
+                ageLimit: parseInt(formData.get("ageLimit"), 10),
+                description: formData.get("description"),
+                movieGenre: formData.get("genre"),
+                active: formData.get("isActive") === "on",
+            };
+
+            await handleCreateMovie(movieData, container, heading, backLink, sectionConfig);
+        });
+    });
+
+    async function handleCreateMovie(newMovieData, container, heading, backLink, sectionConfig) {
+        try {
+            const createdMovie = await addMovie(newMovieData);
+            alert(`New movie created with ID: ${createdMovie.id}`);
+            // Optionally, you can re-render the section to show the new movie
+            container.innerHTML = ""; // Clear existing content
+            container.appendChild(heading);
+            container.appendChild(backLink);
+            container.appendChild(createButton);
+            await sectionConfig.render(container);
+        } catch (error) {
+            console.error("Error while creating a new movie:", error);
+            alert("Failed to create a new movie. Please try again.");
+        }
+    }
+    container.appendChild(createButton);
 
     await sectionConfig.render(container);
 

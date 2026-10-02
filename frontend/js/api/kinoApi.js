@@ -32,3 +32,29 @@ async function request(endpoint, options = {}) {
         throw error;
     }
 }
+
+export async function addMovie(movieData) {
+    return await request("/movies", {
+        method: "POST",
+        body: JSON.stringify(movieData),
+    });
+}
+
+export async function updateMovie(movieId, movieData) {
+    return await request(`/movies/${encodeURIComponent(movieId)}`, {
+        method: "PUT",
+        body: JSON.stringify(movieData),
+    });
+}
+
+export async function deleteMovie(movieId) {
+    return await request(`/movies/${encodeURIComponent(movieId)}`, {
+        method: "DELETE",
+    });
+}
+
+export async function fetchGenres() {
+    return await request("/genres", {
+        method: "GET",
+    });
+}

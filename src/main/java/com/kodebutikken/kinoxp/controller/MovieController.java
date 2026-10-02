@@ -2,6 +2,8 @@ package com.kodebutikken.kinoxp.controller;
 
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.dto.MovieRequest;
+import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import com.kodebutikken.kinoxp.service.MovieService;
@@ -22,7 +24,7 @@ public class MovieController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Movie>> getAllMovies() {
+    public ResponseEntity<List<MovieResponse>> getAllMovies() {
         return ResponseEntity.ok(movieService.getAllMovies());
     }
 
@@ -37,9 +39,9 @@ public class MovieController {
         return ResponseEntity.ok(MovieGenre.values());
     }
 
-    @PostMapping ("/create")
-    public ResponseEntity<Movie> createMovie(@Valid @RequestBody MovieForm movieForm) {
-        Movie createdMovie = movieService.createMovie(movieForm);
+    @PostMapping
+    public ResponseEntity<MovieResponse> createMovie(@Valid @RequestBody MovieRequest movieRequest) {
+        MovieResponse createdMovie = movieService.createMovie(movieRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMovie);
     }
 
