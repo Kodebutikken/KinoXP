@@ -8,6 +8,8 @@ import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
@@ -99,5 +101,9 @@ public class MovieService {
                         + id + " does not exist"));
         movie.setActive(active);
         return movieRepository.save(movie);
+    }
+
+    public List<Movie> getAllMovies() {
+        return movieRepository.findAll();
     }
 }

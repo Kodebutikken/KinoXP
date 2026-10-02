@@ -3,18 +3,19 @@
     <head>
         <meta charset="UTF-8" />
         <title>KinoXP</title>
-        <link rel="stylesheet" href="css/styles.css" />
+        <link rel="stylesheet" href="/css/styles.css" />
     </head>
     <body>
     <header>
         <nav>
-            <a href="/api/movies">Current Movies</a>
-
+            <a href="/" data-link>Home</a>
+            <a href="/movies" data-link>Current Movies</a>
+            <a href="/admin" data-link>Admin</a>
         </nav>
     </header>
 
-    <main id="app"></main>
+    <main id="app" tabindex="-1"></main>
 
-    <script type="module" src="js/main.js"></script>
+    <script type="module" src="/js/main.js"></script>
     </body>
 </html>

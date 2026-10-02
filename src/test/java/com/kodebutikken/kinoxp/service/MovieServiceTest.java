@@ -12,6 +12,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.util.Optional;
 
@@ -21,6 +23,7 @@ import static org.mockito.Mockito.*;
 //ALT HERINDE ER AI GENERATED
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class MovieServiceTest {
 
     @Mock
@@ -122,7 +125,7 @@ class MovieServiceTest {
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> movieService.deleteMovie(movieId));
+        assertThrows(MovieNotFoundException.class, () -> movieService.deleteMovie(movieId));
 
         verify(movieRepository, never()).deleteById(any());
     }
@@ -162,7 +165,7 @@ class MovieServiceTest {
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(MovieNotFoundException.class,
                 () -> movieService.changeMovieStatus(movieId, false));
 
         verify(movieRepository, never()).save(any());

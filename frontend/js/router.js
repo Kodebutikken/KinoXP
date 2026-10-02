@@ -1,28 +1,110 @@
+"use strict";
+
+import { createHomeView } from "./views/homeView.js";
 import { createMoviesView } from "./views/moviesView.js";
 import { createShowingsView } from "./views/showingsView.js";
+import { createBookingView } from "./views/bookingView.js";
+import { createAdminView } from "./views/adminView.js";
+import { createNotFoundView } from "./views/notFoundView.js";
 
-const routes = {
-    '/movies': { render: createMoviesView },
-    '/showings': { render: createShowingsView },
-};
+const routes = [
+    { path: "/", view: createHomeView, title: "Home" },
+    { path: "/movies", view: createMoviesView, title: "Movies" },
+    { path: "/movies/:movieId/showings", view: createShowingsView, title: "Showings" },
+    { path: "/showings/:showingId/book", view: createBookingView, title: "Book seats" },
+    { path: "/admin", view: createAdminView, title: "Admin" },
+    { path: "/admin/:section", view: createAdminView, title: "Admin" },
+];
 
-export function initRouter() {
-    window.addEventListener("hashchange", handleRoute);
-    window.addEventListener("DOMContentLoaded", handleRoute);
+const compiledRoutes = routes.map(compileRoute);
+
+let renderToken = 0;
+
+function compileRoute(route) {
+    const paramNames = [];
+    const pattern = route.path
+        .split("/")
+        .filter(Boolean)
+        .map((segment) => {
+            if (segment.startsWith(":")) {
+                paramNames.push(segment.slice(1));
+                return "([^/]+)";
+            }
+            return segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        })
+        .join("/");
+
+    return {
+        ...route,
+        regex: new RegExp(`^/${pattern}/?$`),
+        paramNames,
+    };
 }
 
-async function handleRoute() {
-    const rawHash = window.location.hash.slice(1) || "/";
-    const [path, queryString] = rawHash.split("?");
-    const params = new URLSearchParams(queryString || "");
+function matchRoute(pathname) {
+    for (const route of compiledRoutes) {
+        const match = route.regex.exec(pathname);
+        if (match) {
+            const params = {};
+            route.paramNames.forEach((name, index) => {
+                params[name] = decodeURIComponent(match[index + 1]);
+            });
+            return { route, params };
+        }
+    }
+    return null;
+}
 
-    const route = routes[path];
+export function navigate(path) {
+    if (path !== window.location.pathname + window.location.search) {
+        window.history.pushState(null, "", path);
+    }
+    render();
+}
+
+export function initRouter() {
+    window.addEventListener("popstate", render);
+    document.addEventListener("click", handleLinkClick);
+    render();
+}
+
+function handleLinkClick(event) {
+    const link = event.target.closest("a[data-link]");
+    if (!link) return;
+    if (event.defaultPrevented) return;
+    if (event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (link.target === "_blank") return;
+    if (link.origin !== window.location.origin) return;
+
+    event.preventDefault();
+    navigate(link.pathname + link.search);
+}
+
+function updateActiveNavLinks(pathname) {
+    document.querySelectorAll("nav a[data-link]").forEach((link) => {
+        const isActive = link.pathname === pathname;
+        link.classList.toggle("active", isActive);
+        if (isActive) {
+            link.setAttribute("aria-current", "page");
+        } else {
+            link.removeAttribute("aria-current");
+        }
+    });
+}
+
+async function render() {
+    const token = ++renderToken;
     const appContainer = document.getElementById("app");
+    const pathname = window.location.pathname;
+    const query = new URLSearchParams(window.location.search);
 
-    if (!route) {
-        const errorNode = document.createElement("h1");
-        errorNode.textContent = "404 - Site not found";
-        appContainer.replaceChildren(errorNode);
+    const matched = matchRoute(pathname);
+
+    if (!matched) {
+        appContainer.replaceChildren(createNotFoundView());
+        document.title = "KinoXP – Not found";
+        updateActiveNavLinks(pathname);
         return;
     }
 
@@ -31,10 +113,17 @@ async function handleRoute() {
     appContainer.replaceChildren(loadingNode);
 
     try {
-        const viewNode = await route.render(params);
+        const viewNode = await matched.route.view({ params: matched.params, query });
+
+        if (token !== renderToken) return;
 
         appContainer.replaceChildren(viewNode);
+        document.title = `KinoXP – ${matched.route.title}`;
+        updateActiveNavLinks(pathname);
+        appContainer.focus();
     } catch (error) {
+        if (token !== renderToken) return;
+
         console.error("Error while loading view:", error);
         const alertNode = document.createElement("p");
         alertNode.className = "error";
