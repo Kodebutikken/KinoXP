@@ -30,8 +30,8 @@ public class Showing {
 
     private LocalDateTime startTime;
 
-    @Column(name = "is_extra")
-    private boolean extra;
+    @Column(name = "is_extra", nullable = false)
+    private boolean extra = false;
 
     private String status;
 

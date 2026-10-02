@@ -1,6 +1,6 @@
 "use strict";
 
-import {fetchMovies, deleteMovie, updateMovie, addMovie, fetchGenres} from "../api/kinoApi.js";
+import {fetchMovies, deleteMovie, updateMovie, addMovie, fetchGenres, toggleActiveStatus} from "../api/kinoApi.js";
 
 export async function createMoviesView() {
     const container = document.createElement("section");
@@ -118,17 +118,6 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
     });
     form.appendChild(genreInput);
 
-    // Active checkbox
-    const isActiveInput = document.createElement("input");
-    isActiveInput.type = "checkbox";
-    isActiveInput.name = "isActive";
-    isActiveInput.checked = movie ? Boolean(movie.active) : true;
-
-    const isActiveLabel = document.createElement("label");
-    isActiveLabel.textContent = " Active";
-    isActiveLabel.prepend(isActiveInput);
-    form.appendChild(isActiveLabel);
-
     // Buttons container
     const buttonGroup = document.createElement("div");
     buttonGroup.className = "form-buttons";
@@ -238,7 +227,7 @@ export async function renderMoviesSection(container, { onEditMovie, refreshView 
             toggleActiveButton.textContent = movie.active ? "Deactivate" : "Activate";
             toggleActiveButton.addEventListener("click", async () => {
                 try {
-                    await updateMovie(movie.id, { ...movie, active: !movie.active });
+                    await toggleActiveStatus(movie.id, !movie.active);
                     if (refreshView) await refreshView();
                 } catch (error) {
                     console.error("Error toggling active state:", error);

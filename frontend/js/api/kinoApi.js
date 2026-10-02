@@ -53,6 +53,12 @@ export async function deleteMovie(movieId) {
     });
 }
 
+export async function toggleActiveStatus(movieId, active) {
+    return await request(`/movies/${encodeURIComponent(movieId)}/status?active=${active}`, {
+        method: "PUT",
+    });
+}
+
 export async function fetchGenres() {
     return await request(`/movies/genres`);
 }
