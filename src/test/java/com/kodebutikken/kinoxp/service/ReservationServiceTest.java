@@ -2,6 +2,7 @@ package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.Reservation;
+import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.repository.ReservationRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import org.junit.jupiter.api.Test;
@@ -31,8 +32,12 @@ public class ReservationServiceTest {
     @Test
     void createReservation_Success() {
         Long showingId = 1L;
+
+        Showing showing = new Showing();
+        showing.setId(showingId);
+
         Reservation reservation = new Reservation();
-        reservation.setShowingId(showingId);
+        reservation.setShowing(showing);
 
         when(showingRepository.existsById(showingId)).thenReturn(true);
         when(reservationRepository.save(reservation)).thenReturn(reservation);
@@ -46,8 +51,11 @@ public class ReservationServiceTest {
     @Test
     void createReservation_shouldThrow_whenShowingDoesNotExist() {
         Long showingId = 99L;
+        Showing showing = new Showing();
+        showing.setId(showingId);
+
         Reservation reservation = new Reservation();
-        reservation.setShowingId(showingId);
+        reservation.setShowing(showing);
 
         when(showingRepository.existsById(showingId)).thenReturn(false);
 
