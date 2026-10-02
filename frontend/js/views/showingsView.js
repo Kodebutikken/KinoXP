@@ -2,17 +2,17 @@
 
 import { fetchShowings } from "../api/kinoApi.js";
 
-export async function createShowingsView(params) {
+export async function createShowingsView({ params }) {
     const container = document.createElement("section");
     container.className = "showings-page";
 
-    const movieId = params ? params.get("movieId") : null;
+    const movieId = params ? params.movieId : null;
 
     const heading = document.createElement("h1");
-    heading.textContent = 'Showing times';
+    heading.textContent = "Showing times";
     container.appendChild(heading);
 
-    if(!movieId) {
+    if (!movieId) {
         const errorNode = document.createElement("p");
         errorNode.className = "error";
         errorNode.textContent = "No movie ID provided.";
@@ -21,14 +21,16 @@ export async function createShowingsView(params) {
     }
 
     try {
-        const showings = await fetchShowings();
+        const showings = await fetchShowings(movieId);
 
-        if(!showings || showings.length === 0) {
+        if (!showings || showings.length === 0) {
             const noShowingsNode = document.createElement("p");
             noShowingsNode.textContent = "No showings available.";
             container.appendChild(noShowingsNode);
             return container;
         }
+
+        heading.textContent = `Showing times – ${showings[0].movieTitle || ""}`;
 
         const grid = document.createElement("div");
         grid.className = "showings-grid";
@@ -40,17 +42,19 @@ export async function createShowingsView(params) {
             <div class="showing-card">
                 <p class="date-time"></p>
                 <p class="theater"></p>
-                <p class="price"></p>
-                <a class="link" href="">Choose seats</a>
+                <a class="link" href="" data-link>Choose seats</a>
             </div>
             `;
 
             const card = template.content.firstElementChild.cloneNode(true);
 
-            card.querySelector(".date-time)").textContent = showing.dateTime || "Unknown time";
-            card.querySelector(".theater").textContent = showing.theaterId || "Unknown theater";
-            card.querySelector(".price").textContent = showing.price ? `$${showing.price.toFixed(2)}` : "Price not available";
-            card.querySelector(".link").href = `#/seats?showingId=${showing.id}`;
+            const startTime = showing.startTime ? new Date(showing.startTime) : null;
+            card.querySelector(".date-time").textContent =
+                startTime ? startTime.toLocaleString("da-DK") : "Unknown time";
+            card.querySelector(".theater").textContent = showing.theaterName || "Unknown theater";
+            card.querySelector(".link").href = `/showings/${showing.id}/book`;
+
+            grid.appendChild(card);
         });
         container.appendChild(grid);
 
