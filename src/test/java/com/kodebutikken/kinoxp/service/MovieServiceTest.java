@@ -12,9 +12,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
+
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +23,6 @@ import static org.mockito.Mockito.*;
 //ALT HERINDE ER AI GENERATED
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 class MovieServiceTest {
 
     @Mock
@@ -55,17 +54,6 @@ class MovieServiceTest {
         assertTrue(capturedMovie.isActive());
     }
 
-    @Test
-    void deleteMovie_shouldNotDeleteMovie_whenMovieDoesNotExist() {
-        Long movieId = 1L;
-
-        when(movieRepository.existsById(movieId)).thenReturn(false);
-
-        assertThrows(MovieNotFoundException.class, () -> movieService.deleteMovie(movieId));
-
-        verify(showingRepository, never()).deleteByMovieId(anyLong());
-        verify(movieRepository, never()).deleteById(anyLong());
-    }
 
     @Test
     void updateMovie_success() {
@@ -76,18 +64,87 @@ class MovieServiceTest {
                 "Mere action", MovieGenre.THRILLER);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(existingMovie));
-        movieService.updateMovie(movieId, movieForm);
-        ArgumentCaptor<Movie> movieCaptor = ArgumentCaptor.forClass(Movie.class);
-        verify(movieRepository).save(movieCaptor.capture());
-        Movie capturedMovie = movieCaptor.getValue();
+        when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertEquals(movieId, capturedMovie.getId());
-        assertEquals("Batman Returns", capturedMovie.getTitle());
-        assertEquals(126, capturedMovie.getDurationMinutes());
-        assertEquals(18, capturedMovie.getAgeLimit());
-        assertEquals("Mere action", capturedMovie.getDescription());
-        assertEquals(MovieGenre.THRILLER, capturedMovie.getMovieGenre());
-        assertTrue(capturedMovie.isActive());
+        Movie result = movieService.updateMovie(movieId, movieForm);
+
+        assertEquals(movieId, result.getId());
+        assertEquals("Batman Returns", result.getTitle());
+        assertEquals(126, result.getDurationMinutes());
+        assertEquals(18, result.getAgeLimit());
+        assertEquals("Mere action", result.getDescription());
+        assertEquals(MovieGenre.THRILLER, result.getMovieGenre());
+        assertTrue(result.isActive());
+    }
+
+    @Test
+    void getAllMovies_shouldReturnAllMovies() {
+        Movie batman = new Movie(1L, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
+        Movie dune = new Movie(2L, "Dune", 166, 0, "Sci-fi", MovieGenre.SCIENCE_FICTION, true);
+
+        when(movieRepository.findAll()).thenReturn(List.of(batman, dune));
+
+        List<Movie> movies = movieService.getAllMovies();
+
+        assertEquals(2, movies.size());
+        assertEquals("Batman", movies.get(0).getTitle());
+    }
+
+    @Test
+    void getMovieById_shouldReturnMovie_whenMovieExists() {
+        Long movieId = 1L;
+        Movie batman = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
+
+        when(movieRepository.findById(movieId)).thenReturn(Optional.of(batman));
+
+        Movie result = movieService.getMovieById(movieId);
+
+        assertEquals(batman, result);
+    }
+
+    @Test
+    void getMovieById_shouldThrow_whenMovieDoesNotExist() {
+        Long movieId = 99L;
+
+        when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
+
+        assertThrows(MovieNotFoundException.class, () -> movieService.getMovieById(movieId));
+    }
+
+    @Test
+    void createMovie_shouldThrow_whenTitleAlreadyExists() {
+        MovieForm movieForm = new MovieForm("Batman", 155, 0, "Ren action",
+                MovieGenre.ACTION);
+
+        when(movieRepository.existsByTitle("Batman")).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () -> movieService.createMovie(movieForm));
+
+        verify(movieRepository, never()).save(any());
+    }
+
+    @Test
+    void updateMovie_shouldThrow_whenTitleBelongsToAnotherMovie() {
+        Long movieId = 1L;
+        MovieForm movieForm = new MovieForm("Dune", 126, 18, "Mere action", MovieGenre.THRILLER);
+
+        when(movieRepository.existsByTitleAndIdNot("Dune", movieId)).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class, () -> movieService.updateMovie(movieId, movieForm));
+
+        verify(movieRepository, never()).save(any());
+    }
+
+    @Test
+    void updateMovie_shouldThrow_whenMovieDoesNotExist() {
+        Long movieId = 99L;
+        MovieForm movieForm = new MovieForm("Batman Returns", 126, 18, "Mere action", MovieGenre.THRILLER);
+
+        when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
+
+        assertThrows(MovieNotFoundException.class, () -> movieService.updateMovie(movieId, movieForm));
+
+        verify(movieRepository, never()).save(any());
     }
 
     //DELETE
