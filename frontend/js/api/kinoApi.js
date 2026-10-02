@@ -41,7 +41,7 @@ export async function addMovie(movieData) {
 }
 
 export async function updateMovie(movieId, movieData) {
-    return await request(`/movies/${encodeURIComponent(movieId)}`, {
+    return await request(`/movies/${encodeURIComponent(movieId)}/edit`, {
         method: "PUT",
         body: JSON.stringify(movieData),
     });
@@ -54,7 +54,5 @@ export async function deleteMovie(movieId) {
 }
 
 export async function fetchGenres() {
-    return await request(`movies/genres`, {
-        method: "GET",
-    });
+    return await request(`/movies/genres`);
 }

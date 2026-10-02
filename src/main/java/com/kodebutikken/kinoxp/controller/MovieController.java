@@ -45,13 +45,13 @@ public class MovieController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMovie);
     }
 
-    @PostMapping("/{id}/delete")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
         movieService.deleteMovie(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/edit")
+    @PutMapping ("/{id}/edit")
     public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieForm movieForm) {
         Movie movie = movieService.updateMovie(id, movieForm);
         return ResponseEntity.ok(movie);

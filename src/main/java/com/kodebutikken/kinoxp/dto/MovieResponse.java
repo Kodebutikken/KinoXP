@@ -3,6 +3,7 @@ package com.kodebutikken.kinoxp.dto;
 import com.kodebutikken.kinoxp.model.Movie;
 
 public record MovieResponse(
+        Long id,
         String title,
         Integer durationMinutes,
         Integer ageLimit,
@@ -12,11 +13,12 @@ public record MovieResponse(
 ) {
     public static MovieResponse from(Movie movie) {
         return new MovieResponse(
+                movie.getId(),
                 movie.getTitle(),
                 movie.getDurationMinutes(),
                 movie.getAgeLimit(),
                 movie.getDescription(),
-                movie.getMovieGenre().name(),
+                movie.getMovieGenre() != null ? movie.getMovieGenre().name() : null,
                 movie.isActive()
         );
     }
