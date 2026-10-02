@@ -54,7 +54,7 @@ export async function deleteMovie(movieId) {
 }
 
 export async function fetchGenres() {
-    return await request("/genres", {
+    return await request(`movies/genres`, {
         method: "GET",
     });
 }

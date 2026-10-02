@@ -41,70 +41,89 @@ export async function createAdminView({ params }) {
     createButton.textContent = "Create new movie";
     createButton.disabled = false;
     createButton.addEventListener("click", async () => {
-        const newMovieData = document.createElement("form");
-        const titleInput = document.createElement("input");
-        titleInput.type = "text";
-        titleInput.name = "title";
-        titleInput.placeholder = "Movie Title";
-        newMovieData.appendChild(titleInput);
+        try {
+            const newMovieData = document.createElement("form");
+            const titleInput = document.createElement("input");
+            titleInput.type = "text";
+            titleInput.name = "title";
+            titleInput.placeholder = "Movie Title";
+            newMovieData.appendChild(titleInput);
 
-        const durationInput = document.createElement("input");
-        durationInput.type = "number";
-        durationInput.name = "duration";
-        durationInput.placeholder = "Duration (minutes)";
-        newMovieData.appendChild(durationInput);
+            const durationInput = document.createElement("input");
+            durationInput.type = "number";
+            durationInput.name = "duration";
+            durationInput.placeholder = "Duration (minutes)";
+            newMovieData.appendChild(durationInput);
 
-        const ageLimitInput = document.createElement("input");
-        ageLimitInput.type = "number";
-        ageLimitInput.name = "ageLimit";
-        ageLimitInput.placeholder = "Age Limit";
-        newMovieData.appendChild(ageLimitInput);
+            const ageLimitInput = document.createElement("input");
+            ageLimitInput.type = "number";
+            ageLimitInput.name = "ageLimit";
+            ageLimitInput.placeholder = "Age Limit";
+            newMovieData.appendChild(ageLimitInput);
 
-        const descriptionInput = document.createElement("textarea");
-        descriptionInput.name = "description";
-        descriptionInput.placeholder = "Description";
-        newMovieData.appendChild(descriptionInput);
+            const descriptionInput = document.createElement("textarea");
+            descriptionInput.name = "description";
+            descriptionInput.placeholder = "Description";
+            newMovieData.appendChild(descriptionInput);
 
-        const genreInput = document.createElement("select");
-        genreInput.values = await fetchGenres();
-        genreInput.name = "genre";
-        genreInput.placeholder = "Genre";
-        newMovieData.appendChild(genreInput);
+            const genreInput = document.createElement("select");
+            genreInput.name = "genre";
+            genreInput.required = true;
 
-        const isActiveInput = document.createElement("input");
-        isActiveInput.type = "checkbox";
-        isActiveInput.name = "isActive";
-        const isActiveLabel = document.createElement("label");
-        isActiveLabel.textContent = "Active";
-        isActiveLabel.appendChild(isActiveInput);
-        newMovieData.appendChild(isActiveLabel);
+            const placeholderOption = document.createElement("option");
+            placeholderOption.value = "";
+            placeholderOption.textContent = "Select Genre";
+            placeholderOption.disabled = true;
+            placeholderOption.selected = true;
+            genreInput.appendChild(placeholderOption);
 
-        const submitButton = document.createElement("button");
-        submitButton.type = "submit";
-        submitButton.textContent = "Create Movie";
-        newMovieData.appendChild(submitButton);
+            const genres = await fetchGenres();
+            genres.forEach((genre) => {
+                const option = document.createElement("option");
+                option.value = genre;
+                option.textContent = genre;
+                genreInput.appendChild(option);
+            });
 
-        container.innerHTML = ""; // Clear existing content
-        container.appendChild(heading);
-        container.appendChild(backLink);
-        container.appendChild(newMovieData);
+            newMovieData.appendChild(genreInput);
 
-        newMovieData.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const formData = new FormData(newMovieData);
-            const movieData = {
-                title: formData.get("title"),
-                durationMinutes: parseInt(formData.get("duration"), 10),
-                ageLimit: parseInt(formData.get("ageLimit"), 10),
-                description: formData.get("description"),
-                movieGenre: formData.get("genre"),
-                active: formData.get("isActive") === "on",
-            };
+            const isActiveInput = document.createElement("input");
+            isActiveInput.type = "checkbox";
+            isActiveInput.name = "isActive";
+            const isActiveLabel = document.createElement("label");
+            isActiveLabel.textContent = "Active";
+            isActiveLabel.appendChild(isActiveInput);
+            newMovieData.appendChild(isActiveLabel);
 
-            await handleCreateMovie(movieData, container, heading, backLink, sectionConfig);
-        });
+            const submitButton = document.createElement("button");
+            submitButton.type = "submit";
+            submitButton.textContent = "Create Movie";
+            newMovieData.appendChild(submitButton);
+
+            container.innerHTML = ""; // Clear existing content
+            container.appendChild(heading);
+            container.appendChild(backLink);
+            container.appendChild(newMovieData);
+
+            newMovieData.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const formData = new FormData(newMovieData);
+                const movieData = {
+                    title: formData.get("title"),
+                    durationMinutes: parseInt(formData.get("duration"), 10),
+                    ageLimit: parseInt(formData.get("ageLimit"), 10),
+                    description: formData.get("description"),
+                    movieGenre: formData.get("genre"),
+                    active: formData.get("isActive") === "on",
+                };
+
+                await handleCreateMovie(movieData, container, heading, backLink, sectionConfig);
+            });
+        } catch (error) {
+            console.error("Error while preparing the create movie form:", error);
+            alert("Failed to prepare the create movie form. Please try again.");
+        }
     });
-
     async function handleCreateMovie(newMovieData, container, heading, backLink, sectionConfig) {
         try {
             const createdMovie = await addMovie(newMovieData);
