@@ -42,10 +42,27 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
-    public void updateMovie(Long id, MovieForm movieForm) {
-        if (movieForm == null) {
-            throw new IllegalArgumentException("Cant be 0");
+    // Der må ikke være flere film med samme titel
+    private String isValidMovieForm(MovieForm movieForm) {
+        if (movieRepository.existsByTitle(movieForm.title().trim())) {
+            return "There is already a movie with the title: " + movieForm.title().trim();
         }
+        return null;
+    }
+
+    // Titlen må ikke findes på en anden film end den, der redigeres
+    private String isValidUpdatedMovieForm(Long id, MovieForm movieForm) {
+        if (movieRepository.existsByTitleAndIdNot(movieForm.title().trim(), id)) {
+            return "There is already a movie with the title: " + movieForm.title().trim();
+        }
+        return null;
+    }
+
+    public Movie updateMovie(Long id, MovieForm movieForm) {
+        if (movieForm == null) {
+            throw new IllegalArgumentException("Movie form cannot be empty");
+        }
+
         String validationError = isValidUpdatedMovieForm(id, movieForm);
         if (validationError != null) {
             throw new IllegalArgumentException(validationError);
@@ -57,11 +74,9 @@ public class MovieService {
         existingMovie.setDurationMinutes(movieForm.durationMinutes());
         existingMovie.setAgeLimit(movieForm.ageLimit());
         existingMovie.setDescription(movieForm.description());
-
-        //Tilføjet at man kan sætte genre
         existingMovie.setMovieGenre(movieForm.movieGenre());
 
-        movieRepository.save(existingMovie);
+        return movieRepository.save(existingMovie);
     }
 
     @Transactional
@@ -77,24 +92,6 @@ public class MovieService {
         movieRepository.deleteById(id);
     }
 
-    //Ved ikke hvad vi gør når en film ikke har en aldersgrænse, så det blev sådan her.
-    private String isValidMovieForm(MovieForm movieForm) {
-        //Der ikke må være flere film med samme titel.
-        if (movieRepository.existsByTitle(movieForm.title().trim())) {
-            return "There is already a movie with the title: " + movieForm.title().trim();
-        }
-        return null;
-    }
-
-    //KUNNE VÆRE EN DEL AF isValidMovieForm, MEN HAR GJORT SÅDAN HER SÅ VI KAN TJEKKE OM FILMEN ER DEN SAMME SOM VI REDIGERER.
-    private String isValidUpdatedMovieForm(Long id, MovieForm movieForm) {
-        //Titlen må ikke findes på en anden film end den, der redigeres.
-        if (movieRepository.existsByTitleAndIdNot(movieForm.title().trim(), id)) {
-            return "There is already a movie with the title: " + movieForm.title().trim();
-        }
-        return null;
-    }
-
     public Movie changeMovieStatus(Long id, boolean active) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new MovieNotFoundException("Movie with id "
@@ -105,5 +102,10 @@ public class MovieService {
 
     public List<Movie> getAllMovies() {
         return movieRepository.findAll();
+    }
+
+    public Movie getMovieById(Long id) {
+        return movieRepository.findById(id)
+                .orElseThrow(() -> new MovieNotFoundException("Movie with id " + id + " does not exist"));
     }
 }
