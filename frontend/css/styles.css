@@ -130,18 +130,27 @@ h1 {
 
 .seat-grid {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 0.35rem;
-    max-width: 600px;
+    gap: 0.2rem;
+    width: max-content;
     margin: 0 auto 1.5rem;
+}
+
+.sead-grid.theater-1{
+    grid-template-columns: repeat(12, 1fr);
+}
+
+.sead-grid.theater-2{
+    grid-template-columns: repeat(16, 1fr);
+    max-width: 750px;
 }
 
 .seat {
     aspect-ratio: 1;
+    padding: 0;
     border: 1px solid #bbb;
-    border-radius: 0.25rem;
+    border-radius: 0.2rem;
     background: #fff;
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     cursor: pointer;
 }
 
@@ -214,4 +223,42 @@ h1 {
 
 .admin-table button {
     margin-right: 0.35rem;
+}
+
+.seat.booked {
+    background: #ddd;
+    color: #999;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.selection-info {
+    text-align: center;
+    color: #555;
+}
+
+.booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.booking-form input {
+    padding: 0.5rem;
+    border: 1px solid #bbb;
+    border-radius: 0.25rem;
+}
+
+.booking-confirmation {
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.order-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e63946;
 }
