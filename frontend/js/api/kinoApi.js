@@ -62,3 +62,14 @@ export async function toggleActiveStatus(movieId, active) {
 export async function fetchGenres() {
     return await request(`/movies/genres`);
 }
+
+export async function fetchSeatsForShowing(showingId) {
+    return await request(`/showings/${encodeURIComponent(showingId)}/seats`);
+}
+
+export async function createReservation(reservationData) {
+    return await request("/reservations", {
+        method: "POST",
+        body: JSON.stringify(reservationData),
+    });
+}
