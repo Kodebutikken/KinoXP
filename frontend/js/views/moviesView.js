@@ -1,6 +1,6 @@
 "use strict";
 
-import {fetchMovies, deleteMovie, updateMovie, addMovie, fetchGenres, toggleActiveStatus} from "../api/kinoApi.js";
+import {fetchMovies, deleteMovie, fetchGenres, toggleActiveStatus} from "../api/kinoApi.js";
 
 export async function createMoviesView() {
     const container = document.createElement("section");

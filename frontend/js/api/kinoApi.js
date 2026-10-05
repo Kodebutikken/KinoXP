@@ -73,3 +73,22 @@ export async function createReservation(reservationData) {
         body: JSON.stringify(reservationData),
     });
 }
+export async function addShowing(showingData) {
+    return await request("/showings", {
+        method: "POST",
+        body: JSON.stringify(showingData),
+    });
+}
+
+export async function updateShowing(showingId, showingData) {
+    return await request(`/showings/${encodeURIComponent(showingId)}/edit`, {
+        method: "PUT",
+        body: JSON.stringify(showingData),
+    });
+}
+
+export async function deleteShowing(showingId) {
+    return await request(`/showings/${encodeURIComponent(showingId)}`, {
+        method: "DELETE",
+    });
+}
