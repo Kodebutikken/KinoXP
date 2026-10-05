@@ -69,3 +69,10 @@ export async function addShowing(showingData) {
         body: JSON.stringify(showingData),
     });
 }
+
+export async function updateShowing(showingId, showingData) {
+    return await request(`/showings/${encodeURIComponent(showingId)}/edit`, {
+        method: "PUT",
+        body: JSON.stringify(showingData),
+    });
+}
