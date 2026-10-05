@@ -1,6 +1,8 @@
 package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.dto.MovieRequest;
+import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
@@ -37,10 +39,10 @@ class MovieServiceTest {
 
     @Test
     void createMovie_success() {
-        MovieForm movieForm = new MovieForm("Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION);
+        MovieRequest movieRequest = new MovieRequest("Batman", 155, 0, "Ren action",
+                MovieGenre.ACTION, true);
 
-        movieService.createMovie(movieForm);
+        movieService.createMovie(movieRequest);
 
         ArgumentCaptor<Movie> movieCaptor = ArgumentCaptor.forClass(Movie.class);
         verify(movieRepository).save(movieCaptor.capture());
@@ -84,10 +86,10 @@ class MovieServiceTest {
 
         when(movieRepository.findAll()).thenReturn(List.of(batman, dune));
 
-        List<Movie> movies = movieService.getAllMovies();
+        List<MovieResponse> movies = movieService.getAllMovies();
 
         assertEquals(2, movies.size());
-        assertEquals("Batman", movies.get(0).getTitle());
+        assertEquals("Batman", movies.get(0).title());
     }
 
     @Test
@@ -113,12 +115,12 @@ class MovieServiceTest {
 
     @Test
     void createMovie_shouldThrow_whenTitleAlreadyExists() {
-        MovieForm movieForm = new MovieForm("Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION);
+        MovieRequest movieRequest = new MovieRequest("Batman", 155, 0, "Ren action",
+                MovieGenre.ACTION, true);
 
         when(movieRepository.existsByTitle("Batman")).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> movieService.createMovie(movieForm));
+        assertThrows(IllegalArgumentException.class, () -> movieService.createMovie(movieRequest));
 
         verify(movieRepository, never()).save(any());
     }

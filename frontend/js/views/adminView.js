@@ -1,7 +1,8 @@
 "use strict";
 
-import { fetchMovies } from "../api/kinoApi.js";
 import { createNotFoundView } from "./notFoundView.js";
+import { addMovie, updateMovie } from "../api/kinoApi.js";
+import { renderMovieForm, renderMoviesSection } from "./moviesView.js";
 
 const SECTIONS = {
     movies: { title: "Movies", render: renderMoviesSection },
@@ -26,16 +27,60 @@ export async function createAdminView({ params }) {
 
     const heading = document.createElement("h1");
     heading.textContent = `Admin – ${sectionConfig.title}`;
-    container.appendChild(heading);
 
     const backLink = document.createElement("a");
     backLink.href = "/admin";
     backLink.setAttribute("data-link", "");
     backLink.textContent = "← Back to admin";
-    container.appendChild(backLink);
 
-    await sectionConfig.render(container);
+    async function showSectionView() {
+        container.innerHTML = "";
+        container.appendChild(heading);
+        container.appendChild(backLink);
 
+        if (section === "movies") {
+            const createButton = document.createElement("button");
+            createButton.type = "button";
+            createButton.textContent = "Create new movie";
+            createButton.addEventListener("click", () => {
+                showFormView(null);
+            });
+            container.appendChild(createButton);
+        }
+
+        await sectionConfig.render(container, { onEditMovie: showFormView, refreshView: showSectionView });
+    }
+
+    async function showFormView(movieToEdit = null) {
+        container.innerHTML = "";
+        container.appendChild(heading);
+        container.appendChild(backLink);
+
+        try {
+            await renderMovieForm(container, {
+                movie: movieToEdit,
+                onSubmit: async (movieData) => {
+                    if (movieToEdit) {
+                        await updateMovie(movieToEdit.id, movieData);
+                        alert(`Movie "${movieData.title}" has been updated.`);
+                    } else {
+                        const createdMovie = await addMovie(movieData);
+                        alert(`New movie created with title: ${createdMovie.title}`);
+                    }
+                    await showSectionView();
+                },
+                onCancel: () => {
+                    showSectionView();
+                }
+            });
+        } catch (error) {
+            console.error("Error while rendering movie form:", error);
+            alert("Failed to load form. Please try again.");
+            await showSectionView();
+        }
+    }
+
+    await showSectionView();
     return container;
 }
 
@@ -67,66 +112,6 @@ function renderDashboard() {
     container.appendChild(grid);
 
     return container;
-}
-
-async function renderMoviesSection(container) {
-    const badge = document.createElement("span");
-    badge.className = "coming-soon-badge";
-    badge.textContent = "Editing coming soon";
-    container.appendChild(badge);
-
-    try {
-        const movies = await fetchMovies();
-
-        const table = document.createElement("table");
-        table.className = "admin-table";
-
-        const thead = document.createElement("thead");
-        const headRow = document.createElement("tr");
-        ["Title", "Genre", "Age limit", "Active", "Actions"].forEach((label) => {
-            const th = document.createElement("th");
-            th.textContent = label;
-            headRow.appendChild(th);
-        });
-        thead.appendChild(headRow);
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-
-        (movies || []).forEach((movie) => {
-            const row = document.createElement("tr");
-
-            const titleCell = document.createElement("td");
-            titleCell.textContent = movie.title || "";
-            const genreCell = document.createElement("td");
-            genreCell.textContent = movie.movieGenre || "";
-            const ageLimitCell = document.createElement("td");
-            ageLimitCell.textContent = movie.ageLimit;
-            const activeCell = document.createElement("td");
-            activeCell.textContent = movie.active ? "Yes" : "No";
-
-            const actionsCell = document.createElement("td");
-            ["Edit", "Delete", "Toggle active"].forEach((label) => {
-                const button = document.createElement("button");
-                button.type = "button";
-                button.disabled = true;
-                button.textContent = label;
-                actionsCell.appendChild(button);
-            });
-
-            row.append(titleCell, genreCell, ageLimitCell, activeCell, actionsCell);
-            tbody.appendChild(row);
-        });
-
-        table.appendChild(tbody);
-        container.appendChild(table);
-    } catch (error) {
-        console.error("Error while loading movies for admin:", error);
-        const alertNode = document.createElement("p");
-        alertNode.className = "error";
-        alertNode.textContent = "Error while loading movies.";
-        container.appendChild(alertNode);
-    }
 }
 
 async function renderComingSoonSection(container) {

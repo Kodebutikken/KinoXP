@@ -1,6 +1,8 @@
 package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.MovieForm;
+import com.kodebutikken.kinoxp.dto.MovieRequest;
+import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
@@ -8,6 +10,7 @@ import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,32 +23,34 @@ public class MovieService {
         this.showingRepository = showingRepository;
     }
 
-    public Movie createMovie(MovieForm movieForm) {
-        if (movieForm == null) {
+    public MovieResponse createMovie(MovieRequest movieRequest) {
+        if (movieRequest == null) {
             throw new IllegalArgumentException("Cant be 0");
         }
-        String validationError = isValidMovieForm(movieForm);
+        String validationError = isValidMovieForm(movieRequest);
         if (validationError != null) {
             throw new IllegalArgumentException(validationError);
         }
         Movie movie = new Movie();
-        movie.setTitle(movieForm.title().trim());
-        movie.setDurationMinutes(movieForm.durationMinutes());
-        movie.setAgeLimit(movieForm.ageLimit());
-        movie.setDescription(movieForm.description());
+        movie.setTitle(movieRequest.title().trim());
+        movie.setDurationMinutes(movieRequest.durationMinutes());
+        movie.setAgeLimit(movieRequest.ageLimit());
+        movie.setDescription(movieRequest.description());
 
         //Tilføjet genre og status
-        movie.setMovieGenre(movieForm.movieGenre());
+        movie.setMovieGenre(movieRequest.movieGenre());
         //Sætter nye film til aktiv
         movie.setActive(true);
 
-        return movieRepository.save(movie);
+        movieRepository.save(movie);
+
+        return MovieResponse.from(movie);
     }
 
     // Der må ikke være flere film med samme titel
-    private String isValidMovieForm(MovieForm movieForm) {
-        if (movieRepository.existsByTitle(movieForm.title().trim())) {
-            return "There is already a movie with the title: " + movieForm.title().trim();
+    private String isValidMovieForm(MovieRequest movieRequest) {
+        if (movieRepository.existsByTitle(movieRequest.title().trim())) {
+            return "There is already a movie with the title: " + movieRequest.title().trim();
         }
         return null;
     }
@@ -74,6 +79,8 @@ public class MovieService {
         existingMovie.setDurationMinutes(movieForm.durationMinutes());
         existingMovie.setAgeLimit(movieForm.ageLimit());
         existingMovie.setDescription(movieForm.description());
+
+        //Tilføjet at man kan sætte genre
         existingMovie.setMovieGenre(movieForm.movieGenre());
 
         return movieRepository.save(existingMovie);
@@ -100,10 +107,14 @@ public class MovieService {
         return movieRepository.save(movie);
     }
 
-    public List<Movie> getAllMovies() {
-        return movieRepository.findAll();
+    public List<MovieResponse> getAllMovies() {
+        List <MovieResponse> movies = new ArrayList<>();
+        List <Movie> movieList = movieRepository.findAll();
+        for (Movie movie : movieList) {
+            movies.add(MovieResponse.from(movie));
+        }
+        return movies;
     }
-
     public Movie getMovieById(Long id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new MovieNotFoundException("Movie with id " + id + " does not exist"));
