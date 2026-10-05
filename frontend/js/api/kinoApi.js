@@ -76,3 +76,9 @@ export async function updateShowing(showingId, showingData) {
         body: JSON.stringify(showingData),
     });
 }
+
+export async function deleteShowing(showingId) {
+    return await request(`/showings/${encodeURIComponent(showingId)}`, {
+        method: "DELETE",
+    });
+}

@@ -1,6 +1,6 @@
 "use strict";
 
-import { fetchMovies, fetchShowings } from "../api/kinoApi.js";
+import { fetchMovies, fetchShowings, deleteShowing } from "../api/kinoApi.js";
 
 /**
  * Offentlig visning af forestillinger for en film
@@ -244,6 +244,25 @@ function buildShowingsTable(showings, movieId, onEditShowing) {
             if (onEditShowing) onEditShowing({ ...showing, movieId: showing.movieId ?? movieId });
         });
         actionsCell.appendChild(editButton);
+
+        // Delete button
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.textContent = "Delete";
+        deleteButton.addEventListener("click", async () => {
+            const label = `${showing.movieTitle || "showing"} (${formatStartTime(showing.startTime)})`;
+            if (confirm(`Are you sure you want to delete the showing "${label}"?`)) {
+                try {
+                    await deleteShowing(showing.id);
+                    alert("Showing has been deleted.");
+                    row.remove();
+                } catch (error) {
+                    console.error("Error while deleting the showing:", error);
+                    alert("Failed to delete the showing.");
+                }
+            }
+        });
+        actionsCell.appendChild(deleteButton);
 
         row.append(movieCell, theaterCell, timeCell, actionsCell);
         tbody.appendChild(row);
