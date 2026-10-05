@@ -6,14 +6,18 @@ import { createShowingsView } from "./views/showingsView.js";
 import { createBookingView } from "./views/bookingView.js";
 import { createAdminView } from "./views/adminView.js";
 import { createNotFoundView } from "./views/notFoundView.js";
+import { createLoginView } from "./views/loginView.js";
+import { getCurrentUser } from "./api/kinoApi.js";
+import {fetchCurrentUser, updateNavbar} from "./components/navbar.js";
 
 const routes = [
     { path: "/", view: createHomeView, title: "Home" },
     { path: "/movies", view: createMoviesView, title: "Movies" },
     { path: "/movies/:movieId/showings", view: createShowingsView, title: "Showings" },
     { path: "/showings/:showingId/book", view: createBookingView, title: "Book seats" },
-    { path: "/admin", view: createAdminView, title: "Admin" },
-    { path: "/admin/:section", view: createAdminView, title: "Admin" },
+    { path: "/admin", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
+    { path: "/admin/:section", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
+    { path: "/auth/login", view: createLoginView, title: "Login" },
 ];
 
 const compiledRoutes = routes.map(compileRoute);
@@ -94,6 +98,9 @@ function updateActiveNavLinks(pathname) {
 }
 
 async function render() {
+
+    await updateNavbar();
+
     const token = ++renderToken;
     const appContainer = document.getElementById("app");
     const pathname = window.location.pathname;
@@ -108,6 +115,21 @@ async function render() {
         return;
     }
 
+    if(matched.route.protected) {
+        const user = await fetchCurrentUser();
+
+        if(!user) {
+            navigate("/auth/login");
+            return;
+        }
+
+        if (matched.route.allowedRoles && !matched.route.allowedRoles.includes(user.role)) {
+            console.warn("Unauthorized acces attempt: ", pathname);
+            navigate("/"); // Omdiriger til forsiden hvis de ikke har den rette rolle
+            return;
+        }
+    }
+
     const loadingNode = document.createElement("p");
     loadingNode.textContent = "Loading data...";
     appContainer.replaceChildren(loadingNode);
@@ -120,6 +142,9 @@ async function render() {
         appContainer.replaceChildren(viewNode);
         document.title = `KinoXP – ${matched.route.title}`;
         updateActiveNavLinks(pathname);
+
+        await updateNavbar();
+
         appContainer.focus();
     } catch (error) {
         if (token !== renderToken) return;

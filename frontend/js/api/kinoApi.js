@@ -17,8 +17,11 @@ async function request(endpoint, options = {}) {
                 "Content-Type": "application/json",
                 ...options.headers,
             },
+            credentials: "include",
             ...options,
         });
+
+        if(response.status === 401 && endpoint === "/auth/me") return null;
 
         if (!response.ok) {
             throw new Error("HTTP " + response.status);
@@ -63,6 +66,29 @@ export async function fetchGenres() {
     return await request(`/movies/genres`);
 }
 
+export async function loginUser(credentials) {
+    return await request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(credentials),
+    });
+}
+
+export async function logoutUser() {
+    return await request("/auth/logout", {
+        method: "POST",
+    });
+}
+
+export async function getCurrentUser() {
+    try {
+        return await request("/auth/me");
+    } catch (error) {
+        if(error.message.includes("401")) {
+            return null;
+        }
+        throw error;
+    }
+}
 export async function fetchSeatsForShowing(showingId) {
     return await request(`/showings/${encodeURIComponent(showingId)}/seats`);
 }
