@@ -62,3 +62,10 @@ export async function toggleActiveStatus(movieId, active) {
 export async function fetchGenres() {
     return await request(`/movies/genres`);
 }
+
+export async function addShowing(showingData) {
+    return await request("/showings", {
+        method: "POST",
+        body: JSON.stringify(showingData),
+    });
+}

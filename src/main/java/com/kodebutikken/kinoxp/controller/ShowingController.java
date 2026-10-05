@@ -1,6 +1,5 @@
 package com.kodebutikken.kinoxp.controller;
 
-import com.kodebutikken.kinoxp.dto.ShowingForm;
 import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
 import com.kodebutikken.kinoxp.service.ShowingService;
@@ -30,8 +29,14 @@ public class ShowingController {
     }
 
     @PostMapping
-    public ResponseEntity<ShowingResponse> createShowing(@Valid @RequestBody ShowingRequest showingRequest){
-        ShowingResponse createdShowing = showingService.createShowing(showingRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdShowing);
+    public ResponseEntity<ShowingResponse> createShowing(
+            @Valid @RequestBody ShowingRequest showingRequest) {
+
+        ShowingResponse createdShowing =
+                showingService.createShowing(showingRequest);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(createdShowing);
     }
 }

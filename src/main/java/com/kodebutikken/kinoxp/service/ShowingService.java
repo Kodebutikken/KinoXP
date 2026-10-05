@@ -34,21 +34,14 @@ public class ShowingService {
     }
 
     public ShowingResponse createShowing(ShowingRequest showingRequest) {
-        if(showingRequest == null) {
-            throw new IllegalArgumentException("Can't be 0");
-        }
-
-        String validationError = isValidShowingForm(showingRequest);
-
-        if (validationError != null) {
-            throw new IllegalArgumentException(validationError);
-        }
 
         Movie movie = movieRepository.findById(showingRequest.movieId())
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Movie not found"));
 
         Theater theater = theaterRepository.findById(showingRequest.theaterId())
-                .orElseThrow(() -> new IllegalArgumentException("Theater not found"));
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Theater not found"));
 
         Showing showing = new Showing();
 
@@ -60,27 +53,5 @@ public class ShowingService {
         showingRepository.save(showing);
 
         return ShowingResponse.from(showing);
-
-    }
-
-    private String isValidShowingForm(ShowingRequest showingRequest) {
-
-        if (showingRequest.movieId() == null) {
-            return "Movie must be selected";
-        }
-
-        if (showingRequest.theaterId() == null) {
-            return "Theater must be selected";
-        }
-
-        if (showingRequest.startTime() == null) {
-            return "Start time must be filled out";
-        }
-
-        if (showingRequest.startTime().isBefore(LocalDateTime.now())) {
-            return "Start time must be in the future";
-        }
-
-        return null;
     }
 }
