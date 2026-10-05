@@ -1,12 +1,13 @@
 "use strict";
 
 import { createNotFoundView } from "./notFoundView.js";
-import { addMovie, updateMovie } from "../api/kinoApi.js";
+import { addMovie, updateMovie, addShowing } from "../api/kinoApi.js";
 import { renderMovieForm, renderMoviesSection } from "./moviesView.js";
+import { renderShowingForm, renderShowingsSection } from "./showingsView.js";
 
 const SECTIONS = {
     movies: { title: "Movies", render: renderMoviesSection },
-    showings: { title: "Showings", render: renderComingSoonSection },
+    showings: { title: "Showings", render: renderShowingsSection },
     reservations: { title: "Reservations", render: renderComingSoonSection },
 };
 
@@ -48,6 +49,16 @@ export async function createAdminView({ params }) {
             container.appendChild(createButton);
         }
 
+        if (section === "showings") {
+            const createButton = document.createElement("button");
+            createButton.type = "button";
+            createButton.textContent = "Create new showing";
+            createButton.addEventListener("click", () => {
+                showShowingFormView();
+            });
+            container.appendChild(createButton);
+        }
+
         await sectionConfig.render(container, { onEditMovie: showFormView, refreshView: showSectionView });
     }
 
@@ -75,6 +86,34 @@ export async function createAdminView({ params }) {
             });
         } catch (error) {
             console.error("Error while rendering movie form:", error);
+            alert("Failed to load form. Please try again.");
+            await showSectionView();
+        }
+    }
+
+    async function showShowingFormView() {
+        container.innerHTML = "";
+        container.appendChild(heading);
+        container.appendChild(backLink);
+
+        try {
+            await renderShowingForm(container, {
+                onSubmit: async (showingData) => {
+                    try {
+                        const createdShowing = await addShowing(showingData);
+                        alert(`New showing created for: ${createdShowing.movieTitle || "movie"}`);
+                        await showSectionView();
+                    } catch (error) {
+                        console.error("Error while creating showing:", error);
+                        alert("Failed to create showing.");
+                    }
+                },
+                onCancel: () => {
+                    showSectionView();
+                }
+            });
+        } catch (error) {
+            console.error("Error while rendering showing form:", error);
             alert("Failed to load form. Please try again.");
             await showSectionView();
         }
