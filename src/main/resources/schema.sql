@@ -100,7 +100,6 @@ CREATE TABLE showing
     theater_id BIGINT        NOT NULL,
     start_time DATETIME        NOT NULL,
     is_extra   BOOLEAN     NOT NULL DEFAULT FALSE,
-    status     VARCHAR(50) NOT NULL,
 
     FOREIGN KEY (movie_id) REFERENCES movie (id),
     FOREIGN KEY (theater_id)  REFERENCES theater (id)
@@ -116,7 +115,7 @@ CREATE TABLE reservation
     customer_id BIGINT        NOT NULL,
     showing_id   BIGINT        NOT NULL,
     created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status      VARCHAR(50) NOT NULL,
+    is_paid      BOOLEAN     DEFAULT FALSE,
 
     FOREIGN KEY (customer_id) REFERENCES customer (id),
     FOREIGN KEY (showing_id) REFERENCES showing (id)

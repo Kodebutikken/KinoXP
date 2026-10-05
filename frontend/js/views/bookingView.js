@@ -1,9 +1,7 @@
 "use strict";
 
 import { getState, setSelectedShowing, toggleSeat } from "../state/bookingState.js";
-
-const ROW_COUNT = 8;
-const SEATS_PER_ROW = 12;
+import { fetchSeatsForShowing, createReservation } from "../api/kinoApi.js";
 
 export async function createBookingView({ params }) {
     const container = document.createElement("section");
@@ -16,60 +14,120 @@ export async function createBookingView({ params }) {
     heading.textContent = "Choose your seats";
     container.appendChild(heading);
 
-    const banner = document.createElement("p");
-    banner.className = "placeholder-banner";
-    banner.textContent = "Booking is not available yet. Demo only.";
-    container.appendChild(banner);
-
     const subheading = document.createElement("p");
     subheading.textContent = `Showing #${showingId}`;
     container.appendChild(subheading);
 
+    let seats;
+    try {
+        seats = await fetchSeatsForShowing(showingId);
+    } catch (error) {
+        const errorNode = document.createElement("p");
+        errorNode.className = "error";
+        errorNode.textContent = "Could not load seats for this showing.";
+        container.appendChild(errorNode);
+        return container;
+    }
     const screenLabel = document.createElement("div");
     screenLabel.className = "screen-label";
     screenLabel.textContent = "Screen";
     container.appendChild(screenLabel);
 
-    const seatGrid = createSeatGrid();
-    container.appendChild(seatGrid);
-
     const confirmButton = document.createElement("button");
-    confirmButton.type = "button";
+    confirmButton.type = "submit";
     confirmButton.className = "confirm-booking";
     confirmButton.textContent = "Confirm booking";
     confirmButton.disabled = true;
-    container.appendChild(confirmButton);
+
+    // Knappen åbnes først, når mindst ét sæde er valgt
+    function updateSelection() {
+        confirmButton.disabled = getState().selectedSeats.length === 0;
+    }
+
+    const seatGrid = createSeatGrid(seats, updateSelection);
+    container.appendChild(seatGrid);
+
+    // Formular til navn og email
+    const form = document.createElement("form");
+    form.className = "booking-form";
+    form.innerHTML = `
+        <input name="customerName" type="text" placeholder="Name" required>
+        <input name="customerEmail" type="email" placeholder="Email" required>
+        <input name="customerPhone" type="tel" placeholder="Phone (optional)">
+    `;
+    form.appendChild(confirmButton);
+    container.appendChild(form);
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        try {
+            const reservation = await createReservation({
+                showingId: Number(showingId),
+                seatIds: getState().selectedSeats,
+                customerName: formData.get("customerName"),
+                customerEmail: formData.get("customerEmail"),
+                customerPhone: formData.get("customerPhone") || null,
+            });
+            container.replaceChildren(createConfirmation(reservation));
+        } catch (error) {
+            alert(`Booking failed: ${error.message}`);
+        }
+    });
 
     return container;
 }
 
-function createSeatGrid() {
+function createSeatGrid(seats, onSelectionChange) {
     const grid = document.createElement("div");
     grid.className = "seat-grid";
 
-    const state = getState();
+    // Antal kolonner følger salen
+    const seatsPerRow = Math.max(...seats.map((seat) => seat.seatNumber));
+    grid.style.gridTemplateColumns = `repeat(${seatsPerRow}, 1.5rem)`;
 
-    for (let row = 0; row < ROW_COUNT; row++) {
-        const rowLabel = String.fromCharCode(65 + row);
+    seats.forEach((seat) => {
+        const rowLabel = String.fromCharCode(64 + seat.seatRow);   // 1 → A, 2 → B ...
 
-        for (let seatNumber = 1; seatNumber <= SEATS_PER_ROW; seatNumber++) {
-            const seatId = `${rowLabel}${seatNumber}`;
+        const seatButton = document.createElement("button");
+        seatButton.type = "button";
+        seatButton.className = "seat";
+        seatButton.textContent = `${rowLabel}${seat.seatNumber}`;
 
-            const seatButton = document.createElement("button");
-            seatButton.type = "button";
-            seatButton.className = "seat";
-            seatButton.textContent = seatId;
-            seatButton.setAttribute("aria-pressed", state.selectedSeats.includes(seatId));
-
+        if (seat.booked) {
+            seatButton.classList.add("booked");
+            seatButton.disabled = true;
+        } else {
             seatButton.addEventListener("click", () => {
-                const selectedSeats = toggleSeat(seatId);
-                seatButton.classList.toggle("selected", selectedSeats.includes(seatId));
-                seatButton.setAttribute("aria-pressed", selectedSeats.includes(seatId));
+                const selectedSeats = toggleSeat(seat.id);          // det rigtige id fra databasen
+                seatButton.classList.toggle("selected", selectedSeats.includes(seat.id));
+                onSelectionChange();
             });
-
-            grid.appendChild(seatButton);
         }
-    }
+
+        grid.appendChild(seatButton);
+    });
 
     return grid;
+}
+
+function createConfirmation(reservation) {
+    const section = document.createElement("section");
+    section.className = "booking-confirmation";
+
+    const seatLabels = reservation.seats
+        .map((seat) => `${String.fromCharCode(64 + seat.seatRow)}${seat.seatNumber}`)
+        .join(", ");
+
+    section.innerHTML = `
+        <h1>Booking confirmed!</h1>
+        <p class="order-number"></p>
+        <p class="details"></p>
+        <p>Show your order number at the cinema to get your tickets.</p>
+    `;
+    section.querySelector(".order-number").textContent = `Order number: ${reservation.orderNumber}`;
+    section.querySelector(".details").textContent =
+        `${reservation.movieTitle} – ${reservation.theaterName} – Seats: ${seatLabels}`;
+
+    return section;
 }

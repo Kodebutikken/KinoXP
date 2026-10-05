@@ -33,8 +33,6 @@ public class Showing {
     @Column(name = "is_extra", nullable = false)
     private boolean extra = false;
 
-    private String status;
-
     @ToString.Exclude
     @OneToMany(mappedBy = "showing")
     private List<Reservation> reservations = new ArrayList<>();

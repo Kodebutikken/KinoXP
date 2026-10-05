@@ -89,3 +89,32 @@ export async function getCurrentUser() {
         throw error;
     }
 }
+export async function fetchSeatsForShowing(showingId) {
+    return await request(`/showings/${encodeURIComponent(showingId)}/seats`);
+}
+
+export async function createReservation(reservationData) {
+    return await request("/reservations", {
+        method: "POST",
+        body: JSON.stringify(reservationData),
+    });
+}
+export async function addShowing(showingData) {
+    return await request("/showings", {
+        method: "POST",
+        body: JSON.stringify(showingData),
+    });
+}
+
+export async function updateShowing(showingId, showingData) {
+    return await request(`/showings/${encodeURIComponent(showingId)}/edit`, {
+        method: "PUT",
+        body: JSON.stringify(showingData),
+    });
+}
+
+export async function deleteShowing(showingId) {
+    return await request(`/showings/${encodeURIComponent(showingId)}`, {
+        method: "DELETE",
+    });
+}
