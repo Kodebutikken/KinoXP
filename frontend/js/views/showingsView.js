@@ -63,11 +63,15 @@ export async function createShowingsView({ params }) {
 }
 
 /**
- * Formular til oprettelse af en forestilling (admin)
+ * Formular til oprettelse og redigering af en forestilling (admin)
  */
-export async function renderShowingForm(container, { onSubmit, onCancel } = {}) {
+export async function renderShowingForm(container, { showing = null, onSubmit, onCancel } = {}) {
+    const isEdit = Boolean(showing);
+
     const formHeading = document.createElement("h2");
-    formHeading.textContent = "Create New Showing";
+    formHeading.textContent = isEdit
+        ? `Edit Showing: ${showing.movieTitle || ""}`
+        : "Create New Showing";
     container.appendChild(formHeading);
 
     const form = document.createElement("form");
@@ -82,7 +86,7 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
     placeholderOption.value = "";
     placeholderOption.textContent = "Select Movie";
     placeholderOption.disabled = true;
-    placeholderOption.selected = true;
+    placeholderOption.selected = !showing?.movieId;
     movieInput.appendChild(placeholderOption);
 
     const movies = await fetchMovies();
@@ -90,6 +94,9 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
         const option = document.createElement("option");
         option.value = movie.id;
         option.textContent = movie.title;
+        if (showing && showing.movieId === movie.id) {
+            option.selected = true;
+        }
         movieInput.appendChild(option);
     });
     form.appendChild(movieInput);
@@ -100,6 +107,7 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
     theaterInput.name = "theaterId";
     theaterInput.placeholder = "Theater ID";
     theaterInput.min = "1";
+    theaterInput.value = showing?.theaterId ?? "";
     theaterInput.required = true;
     form.appendChild(theaterInput);
 
@@ -107,6 +115,7 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
     const startTimeInput = document.createElement("input");
     startTimeInput.type = "datetime-local";
     startTimeInput.name = "startTime";
+    startTimeInput.value = showing?.startTime ? showing.startTime.slice(0, 16) : "";
     startTimeInput.required = true;
     form.appendChild(startTimeInput);
 
@@ -116,7 +125,7 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
 
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
-    submitButton.textContent = "Create Showing";
+    submitButton.textContent = isEdit ? "Update Showing" : "Create Showing";
     buttonGroup.appendChild(submitButton);
 
     if (onCancel) {
@@ -151,7 +160,7 @@ export async function renderShowingForm(container, { onSubmit, onCancel } = {}) 
  * Tabelvisning af forestillinger til admin-panelet.
  * Backend kan kun hente forestillinger pr. film, så man vælger først en film.
  */
-export async function renderShowingsSection(container) {
+export async function renderShowingsSection(container, { onEditShowing } = {}) {
     try {
         const movies = await fetchMovies();
 
@@ -180,7 +189,8 @@ export async function renderShowingsSection(container) {
             tableWrapper.replaceChildren();
             try {
                 const showings = await fetchShowings(movieSelect.value);
-                tableWrapper.appendChild(buildShowingsTable(showings));
+                const movieId = parseInt(movieSelect.value, 10);
+                tableWrapper.appendChild(buildShowingsTable(showings, movieId, onEditShowing));
             } catch (error) {
                 console.error("Error while loading showings for admin:", error);
                 const alertNode = document.createElement("p");
@@ -198,13 +208,13 @@ export async function renderShowingsSection(container) {
     }
 }
 
-function buildShowingsTable(showings) {
+function buildShowingsTable(showings, movieId, onEditShowing) {
     const table = document.createElement("table");
     table.className = "admin-table";
 
     const thead = document.createElement("thead");
     const headRow = document.createElement("tr");
-    ["Movie", "Theater", "Start time"].forEach((label) => {
+    ["Movie", "Theater", "Start time", "Actions"].forEach((label) => {
         const th = document.createElement("th");
         th.textContent = label;
         headRow.appendChild(th);
@@ -224,7 +234,18 @@ function buildShowingsTable(showings) {
         const timeCell = document.createElement("td");
         timeCell.textContent = formatStartTime(showing.startTime);
 
-        row.append(movieCell, theaterCell, timeCell);
+        const actionsCell = document.createElement("td");
+
+        // Edit button
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", () => {
+            if (onEditShowing) onEditShowing({ ...showing, movieId: showing.movieId ?? movieId });
+        });
+        actionsCell.appendChild(editButton);
+
+        row.append(movieCell, theaterCell, timeCell, actionsCell);
         tbody.appendChild(row);
     });
 

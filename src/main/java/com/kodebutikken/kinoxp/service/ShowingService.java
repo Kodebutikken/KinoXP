@@ -2,6 +2,7 @@ package com.kodebutikken.kinoxp.service;
 
 import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
+import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.model.Theater;
@@ -53,5 +54,29 @@ public class ShowingService {
         showingRepository.save(showing);
 
         return ShowingResponse.from(showing);
+    }
+
+    public Showing updateShowing(Long id, ShowingRequest showingRequest) {
+        if(showingRequest == null) {
+            throw new IllegalArgumentException("Showing request cannot be empty");
+        }
+
+        Showing existingShowing = showingRepository.findById(id)
+                .orElseThrow(() -> new ShowingNotFoundException("Showing with id " + id + "does not exist"));
+
+        Movie movie = movieRepository.findById(showingRequest.movieId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Movie not found"));
+
+        Theater theater = theaterRepository.findById(showingRequest.theaterId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Theater not found"));
+
+        existingShowing.setMovie(movie);
+        existingShowing.setTheater(theater);
+        existingShowing.setStartTime(showingRequest.startTime());
+        existingShowing.setExtra(showingRequest.extra());
+
+        return showingRepository.save(existingShowing);
     }
 }

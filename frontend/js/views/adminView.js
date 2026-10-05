@@ -1,7 +1,7 @@
 "use strict";
 
 import { createNotFoundView } from "./notFoundView.js";
-import { addMovie, updateMovie, addShowing } from "../api/kinoApi.js";
+import { addMovie, updateMovie, addShowing, updateShowing } from "../api/kinoApi.js";
 import { renderMovieForm, renderMoviesSection } from "./moviesView.js";
 import { renderShowingForm, renderShowingsSection } from "./showingsView.js";
 
@@ -59,7 +59,7 @@ export async function createAdminView({ params }) {
             container.appendChild(createButton);
         }
 
-        await sectionConfig.render(container, { onEditMovie: showFormView, refreshView: showSectionView });
+        await sectionConfig.render(container, { onEditMovie: showFormView, onEditShowing: showShowingFormView, refreshView: showSectionView });
     }
 
     async function showFormView(movieToEdit = null) {
@@ -91,21 +91,27 @@ export async function createAdminView({ params }) {
         }
     }
 
-    async function showShowingFormView() {
+    async function showShowingFormView(showingToEdit = null) {
         container.innerHTML = "";
         container.appendChild(heading);
         container.appendChild(backLink);
 
         try {
             await renderShowingForm(container, {
+                showing: showingToEdit,
                 onSubmit: async (showingData) => {
                     try {
-                        const createdShowing = await addShowing(showingData);
-                        alert(`New showing created for: ${createdShowing.movieTitle || "movie"}`);
+                        if (showingToEdit) {
+                            await updateShowing(showingToEdit.id, showingData);
+                            alert("Showing has been updated.");
+                        } else {
+                            const createdShowing = await addShowing(showingData);
+                            alert(`New showing created for: ${createdShowing.movieTitle || "movie"}`);
+                        }
                         await showSectionView();
                     } catch (error) {
-                        console.error("Error while creating showing:", error);
-                        alert("Failed to create showing.");
+                        console.error("Error while saving showing:", error);
+                        alert("Failed to save showing.");
                     }
                 },
                 onCancel: () => {
