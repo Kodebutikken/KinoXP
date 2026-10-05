@@ -1,14 +1,14 @@
 package com.kodebutikken.kinoxp.dto;
 
+import com.kodebutikken.kinoxp.model.Movie;
+import com.kodebutikken.kinoxp.model.Theater;
+
 import java.time.LocalDateTime;
 
-public record ShowingDto(
-        Long id,
+public record ShowingRequest(
         Long movieId,
-        String movieTitle,
-        String theaterName,
+        Long theaterId,
         LocalDateTime startTime,
-        String status,
         boolean extra
 ) {
 }

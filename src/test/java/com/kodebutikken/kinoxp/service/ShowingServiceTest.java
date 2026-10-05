@@ -1,6 +1,6 @@
 package com.kodebutikken.kinoxp.service;
 
-import com.kodebutikken.kinoxp.dto.ShowingDto;
+import com.kodebutikken.kinoxp.dto.ShowingResponse;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import com.kodebutikken.kinoxp.model.Showing;
@@ -28,35 +28,65 @@ class ShowingServiceTest {
     private ShowingService showingService;
 
     @Test
-    void getShowingsForMovie_mapsEntityFieldsToDto() {
+    void getShowingsForMovie_mapsEntityFieldsToResponse() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
-        Theater theater = new Theater(2L, "Sal 1", 10, 15);
+
+        Movie movie = new Movie(
+                movieId,
+                "Batman",
+                155,
+                0,
+                "Ren action",
+                MovieGenre.ACTION,
+                true
+        );
+
+        Theater theater = new Theater(
+                2L,
+                "Sal 1",
+                10,
+                15
+        );
+
         LocalDateTime startTime = LocalDateTime.of(2026, 1, 1, 20, 0);
-        Showing showing = new Showing(3L, movie, theater, startTime, false, "SCHEDULED", List.of());
 
-        when(showingRepository.findByMovieIdOrderByStartTimeAsc(movieId)).thenReturn(List.of(showing));
+        Showing showing = new Showing(
+                3L,
+                movie,
+                theater,
+                startTime,
+                false,
+                List.of()
+        );
 
-        List<ShowingDto> result = showingService.getShowingsForMovie(movieId);
+        when(showingRepository.findByMovieIdOrderByStartTimeAsc(movieId))
+                .thenReturn(List.of(showing));
+
+        List<ShowingResponse> result =
+                showingService.getShowingsForMovie(movieId);
 
         assertEquals(1, result.size());
-        ShowingDto dto = result.get(0);
-        assertEquals(3L, dto.id());
-        assertEquals(movieId, dto.movieId());
-        assertEquals("Batman", dto.movieTitle());
-        assertEquals("Sal 1", dto.theaterName());
-        assertEquals(startTime, dto.startTime());
-        assertEquals("SCHEDULED", dto.status());
-        assertFalse(dto.extra());
+
+        ShowingResponse response = result.get(0);
+
+        assertEquals(3L, response.id());
+        assertEquals(movieId, response.movieId());
+        assertEquals("Batman", response.movieTitle());
+        assertEquals(2L, response.theaterId());
+        assertEquals("Sal 1", response.theaterName());
+        assertEquals(startTime, response.startTime());
+        assertFalse(response.extra());
     }
 
     @Test
     void getShowingsForMovie_returnsEmptyList_whenNoShowings() {
         Long movieId = 99L;
 
-        when(showingRepository.findByMovieIdOrderByStartTimeAsc(movieId)).thenReturn(List.of());
+        when(showingRepository.findByMovieIdOrderByStartTimeAsc(movieId))
+                .thenReturn(List.of());
 
-        List<ShowingDto> result = showingService.getShowingsForMovie(movieId);
+        List<ShowingResponse> result =
+                showingService.getShowingsForMovie(movieId);
 
         assertTrue(result.isEmpty());
     }

@@ -100,7 +100,6 @@ CREATE TABLE showing
     theater_id BIGINT        NOT NULL,
     start_time DATETIME        NOT NULL,
     is_extra   BOOLEAN     NOT NULL DEFAULT FALSE,
-    status     VARCHAR(50) NOT NULL,
 
     FOREIGN KEY (movie_id) REFERENCES movie (id),
     FOREIGN KEY (theater_id)  REFERENCES theater (id)
