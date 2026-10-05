@@ -47,4 +47,10 @@ public class ShowingController {
         Showing showing = showingService.updateShowing(id, showingRequest);
         return ResponseEntity.ok(showing);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteShowing(@PathVariable Long id) {
+        showingService.deleteShowing(id);
+        return ResponseEntity.noContent().build();
+    }
 }
