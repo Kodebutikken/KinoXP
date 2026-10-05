@@ -8,9 +8,18 @@
     <body>
     <header>
         <nav>
-            <a href="/" data-link>Home</a>
-            <a href="/movies" data-link>Current Movies</a>
-            <a href="/admin" data-link>Admin</a>
+            <ul>
+                <li><a href="/" data-link>Home</a></li>
+                <li><a href="/movies" data-link>Current Movies</a></li>
+
+                <li id="admin-nav-item" style="display: none;">
+                    <a href="/admin" data-link>Admin</a>
+                </li>
+
+                <li class="nav-auth">
+                    <a href="/auth/login" data-link>Log in</a>
+                </li>
+            </ul>
         </nav>
     </header>
 
