@@ -181,6 +181,18 @@ public class ReservationService {
         }
     }
 
+    // Oprettelse af en billet ud fra en reservation.
+    @Transactional
+    public TicketResponse createTicket(Long orderNumber) {
+        ReservationResponse reservation = markAsPaid(orderNumber);
+
+        // Beregner den samlede pris for reservationen baseret på antallet af sæder og prisen pr. billet (Pris er fastsat til 100 kr. pr. billet)
+        BigDecimal totalPrice = TICKET_PRICE.multiply(BigDecimal.valueOf(reservation.seats().size()));
+        return TicketResponse.from(reservation, totalPrice);
+    }
+
+
+    //HELPERS
     private List<Seat> getSeats(Long reservationId) {
         return reservationSeatRepository.findByReservationId(reservationId).stream()
                 .map(ReservationSeat::getSeat)
@@ -198,13 +210,5 @@ public class ReservationService {
     private Reservation findByOrderNumber(Long orderNumber) {
         return reservationRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
-    // Oprettelse af en billet ud fra en reservation.
-    @Transactional
-    public TicketResponse createTicket(Long orderNumber) {
-        ReservationResponse reservation = markAsPaid(orderNumber);
-
-        // Beregner den samlede pris for reservationen baseret på antallet af sæder og prisen pr. billet (Pris er fastsat til 100 kr. pr. billet)
-        BigDecimal totalPrice = TICKET_PRICE.multiply(BigDecimal.valueOf(reservation.seats().size()));
-        return TicketResponse.from(reservation, totalPrice);
     }
 }
