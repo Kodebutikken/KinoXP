@@ -19,7 +19,7 @@ const routes = [
     { path: "/admin", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
     { path: "/admin/:section", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
     { path: "/auth/login", view: createLoginView, title: "Login" },
-    { path: "/cancel", view: createCancelView, title: "Cancel tickets" },
+    { path: "/cancel", view: createCancelView, title: "Cancel Tickets" },
 ];
 
 const compiledRoutes = routes.map(compileRoute);
