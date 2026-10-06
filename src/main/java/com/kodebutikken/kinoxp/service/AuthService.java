@@ -22,7 +22,8 @@ public class AuthService {
         }
         Employee employee = employeeRepository.findByUsername(loginRequest.username());
 
-        if(!passwordEncoder.matches(loginRequest.password(), employee.getPassword())) {
+        if (employee == null ||
+                !passwordEncoder.matches(loginRequest.password(), employee.getPassword())) {
             throw new InvalidCredentialsException("Invalid username or password");
         }
 
