@@ -6,7 +6,6 @@ import com.kodebutikken.kinoxp.exception.InvalidCredentialsException;
 import com.kodebutikken.kinoxp.model.Employee;
 import com.kodebutikken.kinoxp.repository.EmployeeRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +17,9 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public LoginResponse login(LoginRequest loginRequest) {
+        if (loginRequest == null) {
+            throw new InvalidCredentialsException("Invalid username or password");
+        }
         Employee employee = employeeRepository.findByUsername(loginRequest.username());
 
         if(!passwordEncoder.matches(loginRequest.password(), employee.getPassword())) {
