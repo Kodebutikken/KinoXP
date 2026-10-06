@@ -116,6 +116,7 @@ CREATE TABLE reservation
     showing_id   BIGINT        NOT NULL,
     created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_paid      BOOLEAN     DEFAULT FALSE,
+    order_number BIGINT     NOT NULL UNIQUE,
 
     FOREIGN KEY (customer_id) REFERENCES customer (id),
     FOREIGN KEY (showing_id) REFERENCES showing (id)

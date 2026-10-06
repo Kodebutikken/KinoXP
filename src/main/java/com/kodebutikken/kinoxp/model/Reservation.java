@@ -33,4 +33,7 @@ public class Reservation {
 
     @Column(name = "is_paid", nullable = false)
     private boolean paid = false;
+
+    @Column (name = "order_number", nullable = false, unique = true)
+    private Long orderNumber;
 }

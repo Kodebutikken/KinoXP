@@ -20,7 +20,7 @@ public record ReservationResponse (
 {
     public static ReservationResponse from(Reservation reservation, List<Seat> seats) {
         return new ReservationResponse(
-                reservation.getId(),
+                reservation.getOrderNumber(),
                 reservation.getShowing().getId(),
                 reservation.getShowing().getMovie().getTitle(),
                 reservation.getShowing().getTheater().getName(),

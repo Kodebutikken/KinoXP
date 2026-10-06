@@ -9,6 +9,7 @@ import { createNotFoundView } from "./views/notFoundView.js";
 import { createLoginView } from "./views/loginView.js";
 import { getCurrentUser } from "./api/kinoApi.js";
 import {fetchCurrentUser, updateNavbar} from "./components/navbar.js";
+import { createCancelView } from "./views/cancelView.js";
 
 const routes = [
     { path: "/", view: createHomeView, title: "Home" },
@@ -18,6 +19,7 @@ const routes = [
     { path: "/admin", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
     { path: "/admin/:section", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
     { path: "/auth/login", view: createLoginView, title: "Login" },
+    { path: "/cancel", view: createCancelView, title: "Cancel tickets" },
 ];
 
 const compiledRoutes = routes.map(compileRoute);

@@ -114,6 +114,7 @@ public class ReservationServiceTest {
         // Et ReservationSeat pr. sæde
         verify(reservationSeatRepository, times(2)).save(any(ReservationSeat.class));
     }
+
     @Test
     void createReservation_shouldCreateNewCustomer_withLowercaseEmail() {
         when(showingRepository.findById(10L)).thenReturn(Optional.of(showing));
@@ -278,5 +279,92 @@ public class ReservationServiceTest {
         when(reservationRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(ReservationNotFoundException.class, () -> reservationService.markAsPaid(99L));
+    }
+
+    @Test
+    void cancelTicket_shouldDeleteOnlyThatTicket_whenReservationHasMoreTickets() {
+        showing.setStartTime(LocalDateTime.now().plusDays(3));
+        Reservation reservation = existingReservation(false);
+        ReservationSeat ticketA1 = new ReservationSeat(reservation, seatA1, showing);
+        ReservationSeat ticketA2 = new ReservationSeat(reservation, seatA2, showing);
+
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(reservation));
+        when(reservationSeatRepository.findById(new ReservationSeat.ReservationSeatId(42L, 100L))).thenReturn(Optional.of(ticketA1));
+        when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of(ticketA2));
+
+        reservationService.cancelTicket(42L, 100L, "MADS@example.com");
+
+        verify(reservationSeatRepository).delete(ticketA1);
+        // Der er stadig en billet tilbage, så reservationen bliver
+        verify(reservationRepository, never()).delete(any());
+    }
+
+    @Test
+    void cancelTicket_shouldDeleteReservation_whenLastTicketIsCancelled() {
+        showing.setStartTime(LocalDateTime.now().plusDays(3));
+        Reservation reservation = existingReservation(false);
+        ReservationSeat ticketA1 = new ReservationSeat(reservation, seatA1, showing);
+
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(reservation));
+        when(reservationSeatRepository.findById(new ReservationSeat.ReservationSeatId(42L, 100L))).thenReturn(Optional.of(ticketA1));
+        when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of());
+
+        reservationService.cancelTicket(42L, 100L, "mads@example.com");
+
+        verify(reservationSeatRepository).delete(ticketA1);
+        verify(reservationRepository).delete(reservation);
+    }
+
+    @Test
+    void cancelTicket_shouldThrow_whenEmailDoesNotMatch() {
+        showing.setStartTime(LocalDateTime.now().plusDays(3));
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(false)));
+
+        assertThrows(ReservationNotFoundException.class,
+                () -> reservationService.cancelTicket(42L, 100L, "someone@example.com"));
+
+        verify(reservationSeatRepository, never()).delete(any());
+    }
+
+    @Test
+    void cancelTicket_shouldThrow_whenReservationIsPaid() {
+        showing.setStartTime(LocalDateTime.now().plusDays(3));
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(true)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.cancelTicket(42L, 100L, "mads@example.com"));
+
+        verify(reservationSeatRepository, never()).delete(any());
+    }
+
+    @Test
+    void cancelTicket_shouldThrow_whenLessThan24HoursBeforeShowing() {
+        showing.setStartTime(LocalDateTime.now().plusHours(5));
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(false)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.cancelTicket(42L, 100L, "mads@example.com"));
+
+        verify(reservationSeatRepository, never()).delete(any());
+    }
+
+    @Test
+    void cancelTicket_shouldThrow_whenSeatIsNotInReservation() {
+        showing.setStartTime(LocalDateTime.now().plusDays(3));
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(false)));
+        when(reservationSeatRepository.findById(new ReservationSeat.ReservationSeatId(42L, 999L))).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.cancelTicket(42L, 999L, "mads@example.com"));
+
+        verify(reservationSeatRepository, never()).delete(any());
+    }
+
+    @Test
+    void cancelTicket_shouldThrow_whenReservationDoesNotExist() {
+        when(reservationRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class,
+                () -> reservationService.cancelTicket(99L, 100L, "mads@example.com"));
     }
 }
