@@ -275,7 +275,7 @@ public class ReservationServiceTest {
     void markAsPaid_shouldThrow_whenAlreadyPaid() {
         when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(true)));
 
-        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.markAsPaid(42L));
+        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.markAsPaid(482913L));
 
         verify(reservationRepository, never()).save(any());
     }
@@ -400,9 +400,9 @@ public class ReservationServiceTest {
                 new ReservationSeat(reservation, seatA2, showing)));
         when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        TicketResponse ticket = reservationService.createTicket(42L);
+        TicketResponse ticket = reservationService.createTicket(482913L);
 
-        assertEquals(42L, ticket.orderNumber());
+        assertEquals(482913L, ticket.orderNumber());
         assertEquals("Dune", ticket.movieTitle());
         assertEquals(2, ticket.seats().size());
         assertEquals(new BigDecimal("200.00"), ticket.totalPrice());
