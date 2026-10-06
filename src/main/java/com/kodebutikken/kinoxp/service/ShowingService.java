@@ -1,7 +1,11 @@
 package com.kodebutikken.kinoxp.service;
 
+import com.kodebutikken.kinoxp.dto.ScheduleEntry;
 import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
+import com.kodebutikken.kinoxp.dto.ShowingScheduleRequest;
+import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
+import com.kodebutikken.kinoxp.exception.ShowingConflictException;
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.Showing;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,11 +48,15 @@ public class ShowingService {
 
         Movie movie = movieRepository.findById(showingRequest.movieId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Movie not found"));
+                        new MovieNotFoundException("Movie not found"));
 
         Theater theater = theaterRepository.findById(showingRequest.theaterId())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Theater not found"));
+
+        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
+            throw new ShowingConflictException("There is already a showing in this theater at this time.");
+        }
 
         Showing showing = new Showing();
 
@@ -71,11 +80,15 @@ public class ShowingService {
 
         Movie movie = movieRepository.findById(showingRequest.movieId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Movie not found"));
+                        new MovieNotFoundException("Movie not found"));
 
         Theater theater = theaterRepository.findById(showingRequest.theaterId())
                 .orElseThrow(() ->
                         new IllegalArgumentException("Theater not found"));
+
+        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
+            throw new ShowingConflictException("There is already a showing in this theater at this time.");
+        }
 
         existingShowing.setMovie(movie);
         existingShowing.setTheater(theater);
@@ -97,5 +110,45 @@ public class ShowingService {
         }
         showingRepository.deleteById(id);
         reservationRepository.deleteByShowingId(id);
+    }
+
+    public List<ShowingResponse> generateShowings(
+            ShowingScheduleRequest request) {
+
+        LocalDate startDate = LocalDate.now();
+        LocalDate endDate = startDate.plusMonths(3);
+
+        List<ShowingResponse> generatedShowings = new ArrayList<>();
+
+        for (ScheduleEntry schedule : request.schedules()) {
+
+            for (LocalDate date = startDate;
+                 !date.isAfter(endDate);
+                 date = date.plusDays(1)) {
+
+                // Hvis ugedagen ikke passer, går vi videre
+                if (date.getDayOfWeek() != schedule.day()) {
+                    continue;
+                }
+
+                LocalDateTime startTime =
+                        LocalDateTime.of(date, schedule.time());
+
+                ShowingRequest showingRequest = new ShowingRequest(
+                        request.movieId(),
+                        request.theaterId(),
+                        startTime,
+                        request.extra()
+                );
+                try {
+                    ShowingResponse showing = createShowing(showingRequest);
+                    generatedShowings.add(showing);
+
+                } catch (ShowingConflictException e) {
+                }
+            }
+        }
+
+        return generatedShowings;
     }
 }
