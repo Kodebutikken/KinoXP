@@ -75,7 +75,6 @@ function createReservationCard(reservation, onCancel) {
     const startTime = new Date(reservation.startTime);
     const hoursUntilStart = (startTime - new Date()) / (1000 * 60 * 60);
 
-    // Hvorfor billetterne ikke kan annulleres (null = de kan godt)
     let blockedReason = null;
     if (reservation.isPaid) {
         blockedReason = "Paid tickets cannot be cancelled.";
