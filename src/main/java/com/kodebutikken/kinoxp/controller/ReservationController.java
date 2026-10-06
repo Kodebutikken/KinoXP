@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.kodebutikken.kinoxp.dto.TicketResponse;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -34,5 +35,11 @@ public class ReservationController {
     @PutMapping("/{orderNumber}/paid")
     public ResponseEntity<ReservationResponse> markAsPaid(@PathVariable Long orderNumber) {
         return ResponseEntity.ok(reservationService.markAsPaid(orderNumber));
+    }
+
+    @PostMapping("/{orderNumber}/ticket")
+    public ResponseEntity<TicketResponse> createTicket(@PathVariable Long orderNumber) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reservationService.createTicket(orderNumber));
     }
 }

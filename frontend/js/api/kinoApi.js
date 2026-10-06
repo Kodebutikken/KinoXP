@@ -118,6 +118,13 @@ export async function deleteShowing(showingId) {
     });
 }
 
+export async function getReservation(orderNumber) {
+    return await request(`/reservations/${encodeURIComponent(orderNumber)}`);
+}
+
+export async function createTicket(orderNumber) {
+    return await request(`/reservations/${encodeURIComponent(orderNumber)}/ticket`, {
+        method: "POST",
 export async function generateShowings(scheduleData) {
     return await request("/showings/generate", {
         method: "POST",
