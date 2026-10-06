@@ -11,14 +11,16 @@ export async function fetchShowings(movieId) {
 }
 
 async function request(endpoint, options = {}) {
+    const { headers, ...fetchOptions } = options;
+
     try {
         const response = await fetch(`${API_BASE}${endpoint}`, {
+            credentials: "include",
+            ...fetchOptions,
             headers: {
                 "Content-Type": "application/json",
-                ...options.headers,
+                ...headers,
             },
-            credentials: "include",
-            ...options,
         });
 
         if(response.status === 401 && endpoint === "/auth/me") return null;
@@ -29,7 +31,9 @@ async function request(endpoint, options = {}) {
 
         if (response.status === 204) return null;
 
-        return await response.json();
+        // Nogle endpoints svarer med tom body (f.eks. 200 uden indhold)
+        const text = await response.text();
+        return text ? JSON.parse(text) : null;
     } catch (error) {
         console.error(`API Error [${endpoint}]:`, error.message);
         throw error;
@@ -80,15 +84,10 @@ export async function logoutUser() {
 }
 
 export async function getCurrentUser() {
-    try {
-        return await request("/auth/me");
-    } catch (error) {
-        if(error.message.includes("401")) {
-            return null;
-        }
-        throw error;
-    }
+    // request() returnerer null ved 401 på /auth/me
+    return await request("/auth/me");
 }
+
 export async function fetchSeatsForShowing(showingId) {
     return await request(`/showings/${encodeURIComponent(showingId)}/seats`);
 }
@@ -130,4 +129,17 @@ export async function cancelTicket(orderNumber, seatId, email) {
         request(`/reservations/${encodeURIComponent(orderNumber)}/seats/${seatId}?${query}`, {
             method: "DELETE"
         })
+}
+export async function getReservation(orderNumber) {
+    return await request(`/reservations/${encodeURIComponent(orderNumber)}`);
+}
+
+export async function createTicket(orderNumber) {
+    return await request(`/reservations/${encodeURIComponent(orderNumber)}/ticket`, {
+        method: "POST",
+export async function generateShowings(scheduleData) {
+    return await request("/showings/generate", {
+        method: "POST",
+        body: JSON.stringify(scheduleData),
+    });
 }

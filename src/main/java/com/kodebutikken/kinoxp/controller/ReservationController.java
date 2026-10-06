@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.kodebutikken.kinoxp.dto.TicketResponse;
 
 import java.util.List;
 
@@ -51,5 +52,9 @@ public class ReservationController {
                                              @RequestParam String email) {
         reservationService.cancelTicket(orderNumber, seatId, email);
         return ResponseEntity.noContent().build();
+    @PostMapping("/{orderNumber}/ticket")
+    public ResponseEntity<TicketResponse> createTicket(@PathVariable Long orderNumber) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reservationService.createTicket(orderNumber));
     }
 }

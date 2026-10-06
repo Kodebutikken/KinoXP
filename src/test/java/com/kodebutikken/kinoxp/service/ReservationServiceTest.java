@@ -3,6 +3,7 @@ package com.kodebutikken.kinoxp.service;
 import com.kodebutikken.kinoxp.dto.ReservationRequest;
 import com.kodebutikken.kinoxp.dto.ReservationResponse;
 import com.kodebutikken.kinoxp.dto.SeatAvailabilityResponse;
+import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
 import com.kodebutikken.kinoxp.exception.ReservationNotFoundException;
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.*;
@@ -14,6 +15,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.kodebutikken.kinoxp.dto.TicketResponse;
+import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
+import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -271,7 +275,7 @@ public class ReservationServiceTest {
     void markAsPaid_shouldThrow_whenAlreadyPaid() {
         when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(true)));
 
-        assertThrows(IllegalArgumentException.class, () -> reservationService.markAsPaid(482913L));
+        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.markAsPaid(42L));
 
         verify(reservationRepository, never()).save(any());
     }
@@ -385,6 +389,40 @@ public class ReservationServiceTest {
 
         verify(reservationRepository, times(2)).existsByOrderNumber(anyLong());
         assertTrue(response.orderNumber() >= 100_000 && response.orderNumber() <= 999_999);
+    void createTicket_shouldCreateOneTicketWithAllSeats_andMarkAsPaid() {
+        Reservation reservation = existingReservation(false);
+
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(reservation));
+        when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of(
+                new ReservationSeat(reservation, seatA1, showing),
+                new ReservationSeat(reservation, seatA2, showing)));
+        when(reservationRepository.save(any(Reservation.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TicketResponse ticket = reservationService.createTicket(42L);
+
+        assertEquals(42L, ticket.orderNumber());
+        assertEquals("Dune", ticket.movieTitle());
+        assertEquals(2, ticket.seats().size());
+        assertEquals(new BigDecimal("200.00"), ticket.totalPrice());
+
+        assertTrue(reservation.isPaid());
+        verify(reservationRepository).save(reservation);
+    }
+
+    @Test
+    void createTicket_shouldThrow_whenTicketAlreadyCreated() {
+        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(true)));
+
+        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.createTicket(42L));
+
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void createTicket_shouldThrow_whenReservationDoesNotExist() {
+        when(reservationRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class, () -> reservationService.createTicket(99L));
     }
 }
 
