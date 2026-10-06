@@ -64,7 +64,7 @@ export async function updateNavbar() {
         loginLink.href = "/auth/login";
         loginLink.setAttribute("data-link", "");
         loginLink.className = "nav-btn btn-login";
-        loginLink.textContent = "Log in";
+        loginLink.textContent = "Login";
 
         authItem.appendChild(loginLink);
     }
