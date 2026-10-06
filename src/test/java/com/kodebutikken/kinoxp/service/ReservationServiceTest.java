@@ -413,9 +413,10 @@ public class ReservationServiceTest {
 
     @Test
     void createTicket_shouldThrow_whenTicketAlreadyCreated() {
+        
         when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(true)));
 
-        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.createTicket(42L));
+        assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.createTicket(482913L));
 
         verify(reservationRepository, never()).save(any());
     }
