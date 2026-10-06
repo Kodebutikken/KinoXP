@@ -52,6 +52,8 @@ public class ReservationController {
                                              @RequestParam String email) {
         reservationService.cancelTicket(orderNumber, seatId, email);
         return ResponseEntity.noContent().build();
+    }
+    
     @PostMapping("/{orderNumber}/ticket")
     public ResponseEntity<TicketResponse> createTicket(@PathVariable Long orderNumber) {
         return ResponseEntity.status(HttpStatus.CREATED)
