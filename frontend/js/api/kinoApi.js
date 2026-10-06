@@ -118,6 +118,18 @@ export async function deleteShowing(showingId) {
     });
 }
 
+export async function fetchCustomerReservations(orderNumber, email, name) {
+    const query = new URLSearchParams({orderNumber, email, name});
+    return await request(`/reservations?${query}`)
+}
+
+export async function cancelTicket(orderNumber, seatId, email) {
+    const query = new URLSearchParams({email})
+    return await
+        request(`/reservations/${encodeURIComponent(orderNumber)}/seats/${seatId}?${query}`, {
+            method: "DELETE"
+        })
+}
 export async function getReservation(orderNumber) {
     return await request(`/reservations/${encodeURIComponent(orderNumber)}`);
 }

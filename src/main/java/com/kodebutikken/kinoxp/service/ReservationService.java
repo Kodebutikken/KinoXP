@@ -12,10 +12,12 @@ import com.kodebutikken.kinoxp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,6 +76,7 @@ public class ReservationService {
         Reservation reservation = new Reservation();
         reservation.setShowing(showing);
         reservation.setCustomer(customer);
+        reservation.setOrderNumber(generateOrderNumber());
         reservation = reservationRepository.save(reservation);
 
         //Gemmer et reservationSeat pr. sæde
@@ -87,14 +90,8 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public ReservationResponse getReservation(Long orderNumber) {
-        Reservation reservation = reservationRepository.findById(orderNumber)
-                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
-
-        List<Seat> seats = reservationSeatRepository.findByReservationId(orderNumber).stream()
-                .map(ReservationSeat::getSeat)
-                .toList();
-
-        return ReservationResponse.from(reservation, seats);
+        Reservation reservation = findByOrderNumber(orderNumber);
+        return ReservationResponse.from(reservation, getSeats(reservation.getId()));
     }
 
     private Customer findOrCreateCustomer(ReservationRequest request) {
@@ -128,8 +125,7 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse markAsPaid(Long orderNumber) {
-        Reservation reservation = reservationRepository.findById(orderNumber)
-                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
+        Reservation reservation = findByOrderNumber(orderNumber);
 
         if (reservation.isPaid()) {
             throw new ReservationAlreadyPaidException("Reservation " + orderNumber + " is already paid");
@@ -137,11 +133,52 @@ public class ReservationService {
 
         reservation.setPaid(true);
 
-        List<Seat> seats = reservationSeatRepository.findByReservationId(orderNumber).stream()
-                .map(ReservationSeat::getSeat)
-                .toList();
+        return ReservationResponse.from(reservationRepository.save(reservation), getSeats(reservation.getId()));
+    }
 
-        return ReservationResponse.from(reservationRepository.save(reservation), seats);
+    private static final int CANCELLATION_DEADLINE_HOURS = 24;
+
+    @Transactional(readOnly = true)
+    public ReservationResponse getReservationForCustomer (Long orderNumber, String email, String name) {
+        Reservation reservation = findByOrderNumber(orderNumber);
+
+        boolean emailMatches = reservation.getCustomer().getEmail().equalsIgnoreCase(email.trim());
+
+        boolean nameMatches = reservation.getCustomer().getName().trim().equalsIgnoreCase(name.trim());
+
+        if (!emailMatches || !nameMatches) {
+            throw new ReservationNotFoundException("Reservation not found: " + orderNumber);
+        }
+
+        return ReservationResponse.from(reservation, getSeats(reservation.getId()));
+    }
+
+    @Transactional
+    public void cancelTicket(Long orderNumber, Long seatId, String email){
+        Reservation reservation = findByOrderNumber(orderNumber);
+
+        if (!reservation.getCustomer().getEmail().equalsIgnoreCase(email.trim())) {
+            throw new ReservationNotFoundException("Reservation not found for the provided email: " + email);
+        }
+
+        if(reservation.isPaid()) {
+            throw new IllegalArgumentException("Cannot cancel a paid reservation.");
+        }
+
+        LocalDateTime deadline = reservation.getShowing().getStartTime().minusHours(CANCELLATION_DEADLINE_HOURS);
+        if(LocalDateTime.now().isAfter(deadline)) {
+            throw new IllegalArgumentException("Cannot cancel reservation within 24 hours of the showing.");
+        }
+
+        ReservationSeat ticket = reservationSeatRepository.findById(
+                        new ReservationSeat.ReservationSeatId(reservation.getId(), seatId))
+                .orElseThrow(() -> new IllegalArgumentException("Seat not found in the reservation."));
+
+        reservationSeatRepository.delete(ticket);
+
+        if(reservationSeatRepository.findByReservationId(reservation.getId()).isEmpty()){
+            reservationRepository.delete(reservation);
+        }
     }
 
     // Oprettelse af en billet ud fra en reservation.
@@ -152,5 +189,26 @@ public class ReservationService {
         // Beregner den samlede pris for reservationen baseret på antallet af sæder og prisen pr. billet (Pris er fastsat til 100 kr. pr. billet)
         BigDecimal totalPrice = TICKET_PRICE.multiply(BigDecimal.valueOf(reservation.seats().size()));
         return TicketResponse.from(reservation, totalPrice);
+    }
+
+
+    //HELPERS
+    private List<Seat> getSeats(Long reservationId) {
+        return reservationSeatRepository.findByReservationId(reservationId).stream()
+                .map(ReservationSeat::getSeat)
+                .toList();
+    }
+
+    private Long generateOrderNumber() {
+        Long orderNumber;
+        do {
+            orderNumber = (long) ThreadLocalRandom.current().nextInt(100_000, 1_000_000);
+        } while (reservationRepository.existsByOrderNumber(orderNumber));
+        return orderNumber;
+    }
+
+    private Reservation findByOrderNumber(Long orderNumber) {
+        return reservationRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
     }
 }

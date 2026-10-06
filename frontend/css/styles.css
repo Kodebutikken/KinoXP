@@ -353,6 +353,40 @@ h1 {
     color: #e63946;
 }
 
+.cancel-results {
+    max-width: 560px;
+    margin: 1.5rem auto 0;
+}
+
+.reservation-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.reservation-card h2 {
+    margin: 0 0 0.25rem;
+}
+
+.cancel-note {
+    color: #b35c00;
+    font-size: 0.9rem;
+}
+
+.ticket-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+}
+
+.ticket-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0;
+    border-top: 1px solid #eee;
 .reservation-search {
     display: flex;
     gap: 0.5rem;
