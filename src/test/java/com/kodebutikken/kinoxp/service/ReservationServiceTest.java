@@ -394,7 +394,7 @@ public class ReservationServiceTest {
     void createTicket_shouldCreateOneTicketWithAllSeats_andMarkAsPaid() {
         Reservation reservation = existingReservation(false);
 
-        when(reservationRepository.findById(42L)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.findByOrderNumber(42L)).thenReturn(Optional.of(reservation));
         when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of(
                 new ReservationSeat(reservation, seatA1, showing),
                 new ReservationSeat(reservation, seatA2, showing)));
@@ -414,7 +414,7 @@ public class ReservationServiceTest {
     @Test
     void createTicket_shouldThrow_whenTicketAlreadyCreated() {
         
-        when(reservationRepository.findById(42L)).thenReturn(Optional.of(existingReservation(true)));
+        when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(true)));
 
         assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.createTicket(482913L));
 
@@ -423,7 +423,7 @@ public class ReservationServiceTest {
 
     @Test
     void createTicket_shouldThrow_whenReservationDoesNotExist() {
-        when(reservationRepository.findById(99L)).thenReturn(Optional.empty());
+        when(reservationRepository.findByOrderNUmber(99L)).thenReturn(Optional.empty());
 
         assertThrows(ReservationNotFoundException.class, () -> reservationService.createTicket(99L));
     }
