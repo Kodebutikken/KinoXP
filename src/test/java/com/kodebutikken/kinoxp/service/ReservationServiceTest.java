@@ -389,6 +389,8 @@ public class ReservationServiceTest {
 
         verify(reservationRepository, times(2)).existsByOrderNumber(anyLong());
         assertTrue(response.orderNumber() >= 100_000 && response.orderNumber() <= 999_999);
+    }
+    @Test
     void createTicket_shouldCreateOneTicketWithAllSeats_andMarkAsPaid() {
         Reservation reservation = existingReservation(false);
 
