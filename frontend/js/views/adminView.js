@@ -27,11 +27,13 @@ export async function createAdminView({ params }) {
     container.className = "admin-page";
 
     const heading = document.createElement("h1");
+    heading.className = "admin-heading";
     heading.textContent = `Admin – ${sectionConfig.title}`;
 
     const backLink = document.createElement("a");
     backLink.href = "/admin";
     backLink.setAttribute("data-link", "");
+    backLink.className = "admin-back-link";
     backLink.textContent = "← Back to admin";
 
     async function showSectionView() {
@@ -42,6 +44,7 @@ export async function createAdminView({ params }) {
         if (section === "movies") {
             const createButton = document.createElement("button");
             createButton.type = "button";
+            createButton.className = "btn-primary";
             createButton.textContent = "Create new movie";
             createButton.addEventListener("click", () => {
                 showFormView(null);
@@ -52,6 +55,7 @@ export async function createAdminView({ params }) {
         if (section === "showings") {
             const createButton = document.createElement("button");
             createButton.type = "button";
+            createButton.className = "btn-secondary";
             createButton.textContent = "Create new showing";
             createButton.addEventListener("click", () => {
                 showShowingFormView();

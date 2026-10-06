@@ -54,49 +54,68 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
     const isEdit = Boolean(movie);
 
     const formHeading = document.createElement("h2");
+    formHeading.className = "text-2xl font-bold mb-6";
     formHeading.textContent = isEdit ? `Edit Movie: ${movie.title}` : "Create New Movie";
     container.appendChild(formHeading);
 
     const form = document.createElement("form");
-    form.className = "movie-form";
+
+
+    const formContainer1 = document.createElement("div");
+    formContainer1.className = "form-container";
+    const formContainer2 = document.createElement("div");
+    formContainer2.className = "form-container";
+    const formContainer3 = document.createElement("div");
+    formContainer3.className = "form-container";
+    const formContainer4 = document.createElement("div");
+    formContainer4.className = "form-container";
 
     // Title input
     const titleInput = document.createElement("input");
     titleInput.type = "text";
     titleInput.name = "title";
+    titleInput.className = "input-field";
     titleInput.placeholder = "Movie Title";
     titleInput.value = movie?.title || "";
     titleInput.required = true;
-    form.appendChild(titleInput);
+    formContainer1.appendChild(titleInput);
+    form.appendChild(formContainer1);
 
     // Duration input
     const durationInput = document.createElement("input");
     durationInput.type = "number";
     durationInput.name = "duration";
+    durationInput.className = "input-field";
     durationInput.placeholder = "Duration (minutes)";
     durationInput.value = movie?.durationMinutes || "";
     durationInput.required = true;
-    form.appendChild(durationInput);
+    formContainer2.appendChild(durationInput);
+    form.appendChild(formContainer2);
 
     // Age Limit input
     const ageLimitInput = document.createElement("input");
     ageLimitInput.type = "number";
     ageLimitInput.name = "ageLimit";
+    ageLimitInput.className = "input-field";
     ageLimitInput.placeholder = "Age Limit";
     ageLimitInput.value = movie?.ageLimit ?? "";
     ageLimitInput.required = true;
-    form.appendChild(ageLimitInput);
+    formContainer3.appendChild(ageLimitInput);
+    form.appendChild(formContainer3);
 
     // Description input
     const descriptionInput = document.createElement("textarea");
+    descriptionInput.className = "input-field";
     descriptionInput.name = "description";
     descriptionInput.placeholder = "Description";
     descriptionInput.value = movie?.description || "";
-    form.appendChild(descriptionInput);
+    formContainer4.appendChild(descriptionInput);
+    form.appendChild(formContainer4);
 
     // Genre select
     const genreInput = document.createElement("select");
     genreInput.name = "genre";
+    genreInput.className = "input-field";
     genreInput.required = true;
 
     const placeholderOption = document.createElement("option");
@@ -109,6 +128,7 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
     const genres = await fetchGenres();
     genres.forEach((genre) => {
         const option = document.createElement("option");
+        option.className = "genre-option";
         option.value = genre;
         option.textContent = genre;
         if (movie && movie.movieGenre === genre) {
@@ -117,19 +137,20 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
         genreInput.appendChild(option);
     });
     form.appendChild(genreInput);
-
     // Buttons container
     const buttonGroup = document.createElement("div");
     buttonGroup.className = "form-buttons";
 
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
+    submitButton.className = "btn-primary";
     submitButton.textContent = isEdit ? "Update Movie" : "Create Movie";
     buttonGroup.appendChild(submitButton);
 
     if (onCancel) {
         const cancelButton = document.createElement("button");
         cancelButton.type = "button";
+        cancelButton.className = "btn-secondary";
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", onCancel);
         buttonGroup.appendChild(cancelButton);
@@ -147,7 +168,7 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
             ageLimit: parseInt(formData.get("ageLimit"), 10),
             description: formData.get("description"),
             movieGenre: formData.get("genre"),
-            active: formData.get("isActive") === "on",
+            active: formData.get("isActive") === "true",
         };
 
         if (onSubmit) {

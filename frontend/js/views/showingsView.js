@@ -1,6 +1,6 @@
 "use strict";
 
-import { fetchMovies, fetchShowings, deleteShowing } from "../api/kinoApi.js";
+import {fetchMovies, fetchShowings, deleteShowing, addShowing} from "../api/kinoApi.js";
 
 /**
  * Offentlig visning af forestillinger for en film
@@ -84,6 +84,7 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
 
     const placeholderOption = document.createElement("option");
     placeholderOption.value = "";
+    placeholderOption.className = "optional-field";
     placeholderOption.textContent = "Select Movie";
     placeholderOption.disabled = true;
     placeholderOption.selected = !showing?.movieId;
@@ -125,12 +126,14 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
 
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
+    submitButton.className = "btn-primary";
     submitButton.textContent = isEdit ? "Update Showing" : "Create Showing";
     buttonGroup.appendChild(submitButton);
 
     if (onCancel) {
         const cancelButton = document.createElement("button");
         cancelButton.type = "button";
+        cancelButton.className = "btn-secondary";
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", onCancel);
         buttonGroup.appendChild(cancelButton);
@@ -146,6 +149,7 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
             movieId: parseInt(formData.get("movieId"), 10),
             theaterId: parseInt(formData.get("theaterId"), 10),
             startTime: formData.get("startTime"),
+            extra: formData.get("extra") === "false",
         };
 
         if (onSubmit) {
