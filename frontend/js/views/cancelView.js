@@ -42,15 +42,18 @@ export async function createCancelView() {
         }
     }
 
-    async function onCancel(reservation, seat, seatLabel) {
-        if (!confirm(`Cancel seat ${seatLabel} for ${reservation.movieTitle}?`)) return;
+    async function onCancel(reservation, selectedSeats) {
+        const seatLabels = selectedSeats.map((seat) => seat.label).join(", ");
+        if (!confirm(`Cancel seat(s) ${seatLabels} for ${reservation.movieTitle}?`)) return;
 
         try {
-            await cancelTicket(reservation.orderNumber, seat.id, currentEmail);
-            await loadReservation();
+            for (const seat of selectedSeats) {
+                await cancelTicket(reservation.orderNumber, seat.id, currentEmail);
+            }
         } catch (error) {
-            alert("The ticket could not be cancelled.");
+            alert("One or more tickets could not be cancelled.");
         }
+        await loadReservation();
     }
 
     form.addEventListener("submit", async (event) => {
@@ -98,22 +101,48 @@ function createReservationCard(reservation, onCancel) {
     const list = document.createElement("ul");
     list.className = "ticket-list";
 
+    const cancelButton = document.createElement("button");
+    cancelButton.type = "button";
+    cancelButton.className = "confirm-booking";
+    cancelButton.textContent = "Cancel tickets";
+    cancelButton.disabled = true;
+
+    const checkboxes = [];
+
+    function updateCancelButton() {
+        cancelButton.disabled = !checkboxes.some((checkbox) => checkbox.checked);
+    }
+
     reservation.seats.forEach((seat) => {
         const seatLabel = `${String.fromCharCode(64 + seat.seatRow)}${seat.seatNumber}`;
 
         const item = document.createElement("li");
-        item.textContent = `Seat ${seatLabel} `;
+        const label = document.createElement("label");
 
-        const cancelButton = document.createElement("button");
-        cancelButton.type = "button";
-        cancelButton.textContent = "Cancel";
-        cancelButton.disabled = blockedReason !== null;
-        cancelButton.addEventListener("click", () => onCancel(reservation, seat, seatLabel));
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = seat.id;
+        checkbox.dataset.label = seatLabel;
+        checkbox.disabled = blockedReason !== null;
+        checkbox.addEventListener("change", updateCancelButton);
+        checkboxes.push(checkbox);
 
-        item.appendChild(cancelButton);
+        label.appendChild(checkbox);
+        label.append(` Seat ${seatLabel}`);
+        item.appendChild(label);
         list.appendChild(item);
     });
 
+    cancelButton.addEventListener("click", () => {
+        const selectedSeats = checkboxes
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => ({id: Number(checkbox.value), label: checkbox.dataset.label}));
+        onCancel(reservation, selectedSeats);
+    });
+
     card.appendChild(list);
+    if (!blockedReason) {
+        card.appendChild(cancelButton);
+    }
     return card;
 }
