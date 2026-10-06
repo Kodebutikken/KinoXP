@@ -2,6 +2,7 @@ package com.kodebutikken.kinoxp.controller;
 
 import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
+import com.kodebutikken.kinoxp.dto.ShowingScheduleRequest;
 import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.service.ShowingService;
 import jakarta.validation.Valid;
@@ -52,5 +53,17 @@ public class ShowingController {
     public ResponseEntity<Void> deleteShowing(@PathVariable Long id) {
         showingService.deleteShowing(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/generate")
+    public ResponseEntity<List<ShowingResponse>> generateShowings(
+            @Valid @RequestBody ShowingScheduleRequest request) {
+
+        List<ShowingResponse> generatedShowings =
+                showingService.generateShowings(request);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(generatedShowings);
     }
 }
