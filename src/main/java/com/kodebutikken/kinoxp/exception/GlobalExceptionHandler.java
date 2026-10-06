@@ -44,4 +44,10 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleInvalidCredentialsException(InvalidCredentialsException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
+
+    @ExceptionHandler(ReservationAlreadyPaidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ProblemDetail handleReservationAlreadyPaidException(ReservationAlreadyPaidException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 }

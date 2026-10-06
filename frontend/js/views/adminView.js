@@ -4,11 +4,11 @@ import { createNotFoundView } from "./notFoundView.js";
 import { addMovie, updateMovie, addShowing, updateShowing } from "../api/kinoApi.js";
 import { renderMovieForm, renderMoviesSection } from "./moviesView.js";
 import { renderShowingForm, renderShowingsSection } from "./showingsView.js";
-
+import { renderReservationsSection } from "./reservationsView.js";
 const SECTIONS = {
     movies: { title: "Movies", render: renderMoviesSection },
     showings: { title: "Showings", render: renderShowingsSection },
-    reservations: { title: "Reservations", render: renderComingSoonSection },
+    reservations: { title: "Reservations", render: renderReservationsSection },
 };
 
 export async function createAdminView({ params }) {

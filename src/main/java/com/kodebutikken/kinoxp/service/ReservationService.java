@@ -3,6 +3,8 @@ package com.kodebutikken.kinoxp.service;
 import com.kodebutikken.kinoxp.dto.ReservationRequest;
 import com.kodebutikken.kinoxp.dto.ReservationResponse;
 import com.kodebutikken.kinoxp.dto.SeatAvailabilityResponse;
+import com.kodebutikken.kinoxp.dto.TicketResponse;
+import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
 import com.kodebutikken.kinoxp.exception.ReservationNotFoundException;
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
 import com.kodebutikken.kinoxp.model.*;
@@ -10,6 +12,7 @@ import com.kodebutikken.kinoxp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +26,7 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final ReservationSeatRepository reservationSeatRepository;
     private final CustomerRepository customerRepository;
+    private static final BigDecimal TICKET_PRICE = new BigDecimal("100.00");
 
     public ReservationService(ReservationRepository reservationRepository,
                               ShowingRepository showingRepository,
@@ -128,7 +132,7 @@ public class ReservationService {
                 .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
 
         if (reservation.isPaid()) {
-            throw new IllegalArgumentException("Reservation " + orderNumber + " is already paid");
+            throw new ReservationAlreadyPaidException("Reservation " + orderNumber + " is already paid");
         }
 
         reservation.setPaid(true);
@@ -140,4 +144,13 @@ public class ReservationService {
         return ReservationResponse.from(reservationRepository.save(reservation), seats);
     }
 
+    // Oprettelse af en billet ud fra en reservation.
+    @Transactional
+    public TicketResponse createTicket(Long orderNumber) {
+        ReservationResponse reservation = markAsPaid(orderNumber);
+
+        // Beregner den samlede pris for reservationen baseret på antallet af sæder og prisen pr. billet (Pris er fastsat til 100 kr. pr. billet)
+        BigDecimal totalPrice = TICKET_PRICE.multiply(BigDecimal.valueOf(reservation.seats().size()));
+        return TicketResponse.from(reservation, totalPrice);
+    }
 }
