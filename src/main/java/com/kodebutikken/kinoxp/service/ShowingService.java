@@ -87,7 +87,7 @@ public class ShowingService {
                         new IllegalArgumentException("Theater not found"));
 
         if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
-            throw new IllegalArgumentException("There is already a showing in this theater at this time.");
+            throw new ShowingConflictException("There is already a showing in this theater at this time.");
         }
 
         existingShowing.setMovie(movie);
