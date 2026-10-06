@@ -394,7 +394,7 @@ public class ReservationServiceTest {
     void createTicket_shouldCreateOneTicketWithAllSeats_andMarkAsPaid() {
         Reservation reservation = existingReservation(false);
 
-        when(reservationRepository.findByOrderNumber(42L)).thenReturn(Optional.of(reservation));
+        when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(reservation));
         when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of(
                 new ReservationSeat(reservation, seatA1, showing),
                 new ReservationSeat(reservation, seatA2, showing)));
