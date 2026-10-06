@@ -423,7 +423,7 @@ public class ReservationServiceTest {
 
     @Test
     void createTicket_shouldThrow_whenReservationDoesNotExist() {
-        when(reservationRepository.findByOrderNUmber(99L)).thenReturn(Optional.empty());
+        when(reservationRepository.findByOrderNumber(99L)).thenReturn(Optional.empty());
 
         assertThrows(ReservationNotFoundException.class, () -> reservationService.createTicket(99L));
     }
