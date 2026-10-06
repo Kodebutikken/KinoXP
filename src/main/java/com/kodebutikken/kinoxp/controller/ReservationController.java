@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.kodebutikken.kinoxp.dto.TicketResponse;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
@@ -37,6 +39,21 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.markAsPaid(orderNumber));
     }
 
+    @GetMapping(params = {"orderNumber", "email", "name"})
+    public ResponseEntity<ReservationResponse> getReservationFromCustomer(@RequestParam Long orderNumber,
+                                                                         @RequestParam String email,
+                                                                         @RequestParam String name) {
+        return ResponseEntity.ok(reservationService.getReservationForCustomer(orderNumber, email, name));
+    }
+
+    @DeleteMapping("/{orderNumber}/seats/{seatId}")
+    public ResponseEntity<Void> cancelTicket(@PathVariable Long orderNumber,
+                                             @PathVariable Long seatId,
+                                             @RequestParam String email) {
+        reservationService.cancelTicket(orderNumber, seatId, email);
+        return ResponseEntity.noContent().build();
+    }
+    
     @PostMapping("/{orderNumber}/ticket")
     public ResponseEntity<TicketResponse> createTicket(@PathVariable Long orderNumber) {
         return ResponseEntity.status(HttpStatus.CREATED)
