@@ -1,5 +1,6 @@
 package com.kodebutikken.kinoxp.dto;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotNull;
 
@@ -17,6 +18,8 @@ public record ShowingRequest(
         @Future(message = "Start time must be in the future")
         LocalDateTime startTime,
 
-        boolean extra
+        boolean extra,
+
+        HttpSession session
 ) {
 }

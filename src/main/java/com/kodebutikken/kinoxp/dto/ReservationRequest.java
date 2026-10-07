@@ -1,5 +1,6 @@
 package com.kodebutikken.kinoxp.dto;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,7 +22,8 @@ public record ReservationRequest(
         @Email(message = "Email is not valid")
         String customerEmail,
 
-        String customerPhone
-) {
+        String customerPhone,
 
+        HttpSession session
+) {
 }

@@ -3,8 +3,11 @@ package com.kodebutikken.kinoxp.controller;
 import com.kodebutikken.kinoxp.dto.ReservationRequest;
 import com.kodebutikken.kinoxp.dto.ReservationResponse;
 import com.kodebutikken.kinoxp.model.Reservation;
+import com.kodebutikken.kinoxp.service.AuthService;
 import com.kodebutikken.kinoxp.service.ReservationService;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,14 +16,12 @@ import com.kodebutikken.kinoxp.dto.TicketResponse;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/reservations")
 public class ReservationController {
 
     private final ReservationService reservationService;
-
-    public ReservationController(ReservationService reservationService) {
-        this.reservationService = reservationService;
-    }
+    private final AuthService authService;
 
     @PostMapping
     public ResponseEntity<ReservationResponse> createReservation( @Valid @RequestBody ReservationRequest request) {

@@ -4,8 +4,10 @@ import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
 import com.kodebutikken.kinoxp.dto.ShowingScheduleRequest;
 import com.kodebutikken.kinoxp.model.Showing;
+import com.kodebutikken.kinoxp.service.AuthService;
 import com.kodebutikken.kinoxp.service.ShowingService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,13 +15,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/api/showings")
 public class ShowingController {
-    private final ShowingService showingService;
 
-    public ShowingController(ShowingService showingService) {
-        this.showingService = showingService;
-    }
+    private final ShowingService showingService;
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<List<ShowingResponse>> getShowingsForMovie(

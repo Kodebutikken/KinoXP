@@ -7,6 +7,7 @@ import com.kodebutikken.kinoxp.dto.ShowingScheduleRequest;
 import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.exception.ShowingConflictException;
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
+import com.kodebutikken.kinoxp.exception.UnauthorizedException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.model.Theater;
@@ -15,6 +16,7 @@ import com.kodebutikken.kinoxp.repository.ReservationRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import com.kodebutikken.kinoxp.repository.TheaterRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,19 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ShowingService {
     private final ShowingRepository showingRepository;
     private final MovieRepository movieRepository;
     private final TheaterRepository theaterRepository;
     private final ReservationRepository reservationRepository;
+    private final AuthService authService;
 
-    public ShowingService(ShowingRepository showingRepository, MovieRepository movieRepository,
-                          TheaterRepository theaterRepository, ReservationRepository reservationRepository) {
-        this.showingRepository = showingRepository;
-        this.movieRepository = movieRepository;
-        this.theaterRepository = theaterRepository;
-        this.reservationRepository = reservationRepository;
-    }
 
     public List<ShowingResponse> getShowingsForMovie(Long movieId) {
         return showingRepository.findByMovieIdOrderByStartTimeAsc(movieId)
@@ -46,17 +43,12 @@ public class ShowingService {
 
     public ShowingResponse createShowing(ShowingRequest showingRequest) {
 
-        Movie movie = movieRepository.findById(showingRequest.movieId())
-                .orElseThrow(() ->
-                        new MovieNotFoundException("Movie not found"));
-
-        Theater theater = theaterRepository.findById(showingRequest.theaterId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Theater not found"));
-
-        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
-            throw new ShowingConflictException("There is already a showing in this theater at this time.");
+        if(!authService.isAdmin(showingRequest.session())) {
+            throw new UnauthorizedException("Only administrators can create showings.");
         }
+
+        Movie movie = validateAndGetMovie(showingRequest);
+        Theater theater = validateAndGetTheater(showingRequest);
 
         Showing showing = new Showing();
 
@@ -78,13 +70,8 @@ public class ShowingService {
         Showing existingShowing = showingRepository.findById(id)
                 .orElseThrow(() -> new ShowingNotFoundException("Showing with id " + id + "does not exist"));
 
-        Movie movie = movieRepository.findById(showingRequest.movieId())
-                .orElseThrow(() ->
-                        new MovieNotFoundException("Movie not found"));
-
-        Theater theater = theaterRepository.findById(showingRequest.theaterId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Theater not found"));
+        Movie movie = validateAndGetMovie(showingRequest);
+        Theater theater = validateAndGetTheater(showingRequest);
 
         if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
             throw new ShowingConflictException("There is already a showing in this theater at this time.");
@@ -138,7 +125,8 @@ public class ShowingService {
                         request.movieId(),
                         request.theaterId(),
                         startTime,
-                        request.extra()
+                        request.extra(),
+                        request.session()
                 );
                 try {
                     ShowingResponse showing = createShowing(showingRequest);
@@ -150,5 +138,22 @@ public class ShowingService {
         }
 
         return generatedShowings;
+    }
+
+    private Movie validateAndGetMovie(ShowingRequest showingRequest) {
+        Movie movie = movieRepository.findById(showingRequest.movieId())
+                .orElseThrow(() ->
+                        new MovieNotFoundException("Movie not found"));
+
+        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
+            throw new ShowingConflictException("There is already a showing in this theater at this time.");
+        }
+        return movie;
+    }
+
+    private Theater validateAndGetTheater(ShowingRequest showingRequest) {
+        return theaterRepository.findById(showingRequest.theaterId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Theater not found"));
     }
 }
