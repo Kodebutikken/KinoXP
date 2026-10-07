@@ -1,6 +1,5 @@
 package com.kodebutikken.kinoxp.service;
 
-import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.dto.MovieRequest;
 import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
@@ -62,13 +61,13 @@ class MovieServiceTest {
         Long movieId = 1L;
         Movie existingMovie = new Movie(movieId, "Batman", 155, 0, "Ren action",
                 MovieGenre.ACTION, true);
-        MovieForm movieForm = new MovieForm("Batman Returns", 126, 18,
-                "Mere action", MovieGenre.THRILLER);
+        MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18,
+                "Mere action", MovieGenre.THRILLER, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(existingMovie));
         when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Movie result = movieService.updateMovie(movieId, movieForm);
+        Movie result = movieService.updateMovie(movieId, movieRequest);
 
         assertEquals(movieId, result.getId());
         assertEquals("Batman Returns", result.getTitle());
@@ -89,7 +88,7 @@ class MovieServiceTest {
         List<MovieResponse> movies = movieService.getAllMovies();
 
         assertEquals(2, movies.size());
-        assertEquals("Batman", movies.get(0).title());
+        assertEquals("Batman", movies.getFirst().title());
     }
 
     @Test
@@ -128,11 +127,11 @@ class MovieServiceTest {
     @Test
     void updateMovie_shouldThrow_whenTitleBelongsToAnotherMovie() {
         Long movieId = 1L;
-        MovieForm movieForm = new MovieForm("Dune", 126, 18, "Mere action", MovieGenre.THRILLER);
+        MovieRequest movieRequest = new MovieRequest("Dune", 126, 18, "Mere action", MovieGenre.THRILLER, true);
 
         when(movieRepository.existsByTitleAndIdNot("Dune", movieId)).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> movieService.updateMovie(movieId, movieForm));
+        assertThrows(IllegalArgumentException.class, () -> movieService.updateMovie(movieId, movieRequest));
 
         verify(movieRepository, never()).save(any());
     }
@@ -140,11 +139,11 @@ class MovieServiceTest {
     @Test
     void updateMovie_shouldThrow_whenMovieDoesNotExist() {
         Long movieId = 99L;
-        MovieForm movieForm = new MovieForm("Batman Returns", 126, 18, "Mere action", MovieGenre.THRILLER);
+        MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18, "Mere action", MovieGenre.THRILLER, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
 
-        assertThrows(MovieNotFoundException.class, () -> movieService.updateMovie(movieId, movieForm));
+        assertThrows(MovieNotFoundException.class, () -> movieService.updateMovie(movieId, movieRequest));
 
         verify(movieRepository, never()).save(any());
     }

@@ -1,8 +1,6 @@
 package com.kodebutikken.kinoxp.dto;
 
-import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.Showing;
-import com.kodebutikken.kinoxp.model.Theater;
 
 import java.time.LocalDateTime;
 

@@ -1,8 +1,5 @@
 package com.kodebutikken.kinoxp.dto;
 
-import com.kodebutikken.kinoxp.model.Reservation;
-import com.kodebutikken.kinoxp.model.Seat;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
