@@ -50,4 +50,10 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleReservationAlreadyPaidException(ReservationAlreadyPaidException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
+
+    @ExceptionHandler(ShowingConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ProblemDetail handleShowingConflictException(ShowingConflictException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
 }

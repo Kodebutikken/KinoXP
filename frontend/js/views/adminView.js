@@ -152,6 +152,8 @@ export async function createAdminView({ params }) {
                         console.error("Error while saving showing:", error);
                         if (error.message.includes("400")) {
                             showToast("Could not save the showing. Check that all fields are filled out and the start time is in the future.", "error");
+                        } else if (error.message.includes("409")) {
+                            showToast("Could not save the showing. There is already a showing at this time.", "error");
                         } else {
                             showToast("Could not save the showing. Please try again.", "error");
                         }
