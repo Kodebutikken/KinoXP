@@ -39,7 +39,7 @@ public class MovieController {
         return ResponseEntity.ok(MovieGenre.values());
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<MovieResponse> createMovie(@Valid @RequestBody MovieRequest movieRequest) {
         MovieResponse createdMovie = movieService.createMovie(movieRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdMovie);

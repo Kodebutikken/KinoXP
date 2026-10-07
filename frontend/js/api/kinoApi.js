@@ -41,7 +41,7 @@ async function request(endpoint, options = {}) {
 }
 
 export async function addMovie(movieData) {
-    return await request("/movies", {
+    return await request("/movies/create", {
         method: "POST",
         body: JSON.stringify(movieData),
     });
