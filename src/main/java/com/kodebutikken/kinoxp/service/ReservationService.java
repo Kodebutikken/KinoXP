@@ -7,10 +7,8 @@ import com.kodebutikken.kinoxp.dto.TicketResponse;
 import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
 import com.kodebutikken.kinoxp.exception.ReservationNotFoundException;
 import com.kodebutikken.kinoxp.exception.ShowingNotFoundException;
-import com.kodebutikken.kinoxp.exception.UnauthorizedException;
 import com.kodebutikken.kinoxp.model.*;
 import com.kodebutikken.kinoxp.repository.*;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +21,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
@@ -32,7 +29,18 @@ public class ReservationService {
     private final ReservationSeatRepository reservationSeatRepository;
     private final CustomerRepository customerRepository;
     private static final BigDecimal TICKET_PRICE = new BigDecimal("100.00");
-    private final AuthService authService;
+
+    public ReservationService(ReservationRepository reservationRepository,
+                              ShowingRepository showingRepository,
+                              SeatRepository seatRepository,
+                              ReservationSeatRepository reservationSeatRepository,
+                              CustomerRepository customerRepository) {
+        this.reservationRepository = reservationRepository;
+        this.showingRepository = showingRepository;
+        this.seatRepository = seatRepository;
+        this.reservationSeatRepository = reservationSeatRepository;
+        this.customerRepository = customerRepository;
+    }
 
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {

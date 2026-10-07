@@ -5,7 +5,6 @@ import com.kodebutikken.kinoxp.dto.LoginResponse;
 import com.kodebutikken.kinoxp.exception.InvalidCredentialsException;
 import com.kodebutikken.kinoxp.model.Employee;
 import com.kodebutikken.kinoxp.repository.EmployeeRepository;
-import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,12 +30,4 @@ public class AuthService {
         return new LoginResponse(employee.getId(), employee.getUsername(), employee.getRole());
     }
 
-    public boolean isAdmin(HttpSession session) {
-        LoginResponse loginResponse = (LoginResponse) session.getAttribute("LOGGED_IN_USER");
-        return loginResponse != null && loginResponse.role().name().equals("ADMINISTRATOR");
-    }
-
-    public boolean isSessionValid(HttpSession session) {
-        return session != null && session.getAttribute("LOGGED_IN_USER") != null;
-    }
 }
