@@ -390,6 +390,7 @@ public class ReservationServiceTest {
         verify(reservationRepository, times(2)).existsByOrderNumber(anyLong());
         assertTrue(response.orderNumber() >= 100_000 && response.orderNumber() <= 999_999);
     }
+
     @Test
     void createTicket_shouldCreateOneTicketWithAllSeats_andMarkAsPaid() {
         Reservation reservation = existingReservation(false);
@@ -413,7 +414,7 @@ public class ReservationServiceTest {
 
     @Test
     void createTicket_shouldThrow_whenTicketAlreadyCreated() {
-        
+
         when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(true)));
 
         assertThrows(ReservationAlreadyPaidException.class, () -> reservationService.createTicket(482913L));
@@ -427,5 +428,73 @@ public class ReservationServiceTest {
 
         assertThrows(ReservationNotFoundException.class, () -> reservationService.createTicket(99L));
     }
-}
 
+    @Test
+    void searchActiveReservations_shouldReturnAll_whenNoSearchFields() {
+        Customer mads = new Customer();
+        mads.setName("Mads Hansen");
+        mads.setPhone("20304050");
+        mads.setEmail("mads@example.com");
+
+        Customer ida = new Customer();
+        ida.setName("Ida Jensen");
+        ida.setPhone("11223344");
+        ida.setEmail("ida@example.com");
+
+        Reservation madsReservation = new Reservation();
+        madsReservation.setId(1L);
+        madsReservation.setOrderNumber(111111L);
+        madsReservation.setShowing(showing);
+        madsReservation.setCustomer(mads);
+
+        Reservation idaReservation = new Reservation();
+        idaReservation.setId(2L);
+        idaReservation.setOrderNumber(222222L);
+        idaReservation.setShowing(showing);
+        idaReservation.setCustomer(ida);
+
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(List.of(madsReservation, idaReservation));
+        when(reservationSeatRepository.findByReservationId(1L)).thenReturn(List.of());
+        when(reservationSeatRepository.findByReservationId(2L)).thenReturn(List.of());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(null, "", " ", null);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void searchActiveReservations_shouldFindByName_ignoringCaseAndSpaces() {
+        Customer mads = new Customer();
+        mads.setName("Mads Hansen");
+        mads.setPhone("20304050");
+        mads.setEmail("mads@example.com");
+
+        Customer ida = new Customer();
+        ida.setName("Ida Jensen");
+        ida.setPhone("11223344");
+        ida.setEmail("ida@example.com");
+
+        Reservation madsReservation = new Reservation();
+        madsReservation.setId(1L);
+        madsReservation.setOrderNumber(111111L);
+        madsReservation.setShowing(showing);
+        madsReservation.setCustomer(mads);
+
+        Reservation idaReservation = new Reservation();
+        idaReservation.setId(2L);
+        idaReservation.setOrderNumber(222222L);
+        idaReservation.setShowing(showing);
+        idaReservation.setCustomer(ida);
+
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(List.of(madsReservation, idaReservation));
+        when(reservationSeatRepository.findByReservationId(1L)).thenReturn(List.of());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(null, "  mads hansen ", null, null);
+
+        assertEquals(1, result.size());
+        assertEquals(111111L, result.get(0).orderNumber());
+
+    }
+}

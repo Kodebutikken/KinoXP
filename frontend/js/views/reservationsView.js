@@ -1,47 +1,133 @@
 "use strict";
 
-
-import { getReservation, createTicket } from "../api/kinoApi.js"; // NY: funktionerne fra fil 7
+import { searchReservations, createTicket } from "../api/kinoApi.js"; // ÆNDRET: searchReservations i stedet for getReservation
 
 export async function renderReservationsSection(container) {
     const searchForm = document.createElement("form");
     searchForm.className = "reservation-search";
-
-    const orderInput = document.createElement("input");
-    orderInput.type = "number";
-    orderInput.min = "1";
-    orderInput.name = "orderNumber";
-    orderInput.placeholder = "Order number";
-    orderInput.required = true;
-
-    const searchButton = document.createElement("button");
-    searchButton.type = "submit";
-    searchButton.textContent = "Find reservation";
-
-    searchForm.append(orderInput, searchButton);
+    searchForm.innerHTML = `
+        <input name="orderNumber" type="number" placeholder="Order number">
+        <input name="name" type="text" placeholder="Name">
+        <input name="phone" type="tel" placeholder="Phone">
+        <input name="email" type="email" placeholder="Email">
+        <button type="submit">Search</button>
+        <button type="button" class="clear-search">Show all</button>
+    `;
     container.appendChild(searchForm);
 
     const resultContainer = document.createElement("div");
     container.appendChild(resultContainer);
 
+    let currentSearch = {};
+
+    async function showList() {
+        resultContainer.replaceChildren();
+        try {
+            const reservations = await searchReservations(currentSearch);
+            resultContainer.appendChild(buildReservationList(reservations, showReservation));
+        } catch (error) {
+            resultContainer.appendChild(createErrorNode("Error while loading reservations."));
+        }
+    }
+
+    function showReservation(reservation) {
+        const backButton = document.createElement("button");
+        backButton.type = "button";
+        backButton.textContent = "← Back to list";
+        backButton.addEventListener("click", showList);
+
+        resultContainer.replaceChildren(backButton, buildReservationDetails(reservation));
+    }
+
     searchForm.addEventListener("submit", async (event) => {
         event.preventDefault(); // stop browseren i at genindlæse siden
-        resultContainer.replaceChildren(); // ryd det gamle resultat
-
-        try {
-            const reservation = await getReservation(orderInput.value);
-            resultContainer.appendChild(buildReservationDetails(reservation, resultContainer));
-        } catch (error) {
-            resultContainer.appendChild(createErrorNode(
-                error.message.includes("404")
-                    ? `No reservation with order number ${orderInput.value}.`
-                    : "Error while loading the reservation."
-            ));
-        }
+        const formData = new FormData(searchForm);
+        currentSearch = {
+            orderNumber: formData.get("orderNumber").trim(),
+            name: formData.get("name").trim(),
+            phone: formData.get("phone").trim(),
+            email: formData.get("email").trim(),
+        };
+        await showList();
     });
+
+    searchForm.querySelector(".clear-search").addEventListener("click", async () => {
+        searchForm.reset();
+        currentSearch = {};
+        await showList();
+    });
+
+    await showList();
 }
 
-function buildReservationDetails(reservation, resultContainer) {
+function buildReservationList(reservations, onSelect) {
+    if (reservations.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent = "No active reservations found.";
+        return empty;
+    }
+
+    const wrapper = document.createElement("div");
+
+    const count = document.createElement("p");
+    count.textContent = `${reservations.length} active reservation(s)`;
+    wrapper.appendChild(count);
+
+    const table = document.createElement("table");
+    table.className = "admin-table reservation-table";
+
+    const headRow = document.createElement("tr");
+    ["Order no.", "Name", "Phone", "Email", "Movie", "Time", "Seats", "Status", ""].forEach((label) => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headRow.appendChild(th);
+    });
+    const thead = document.createElement("thead");
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    reservations.forEach((reservation) => {
+        const row = document.createElement("tr");
+
+        // textContent bruges til data, så tekst fra kunden aldrig bliver til HTML
+        [
+            reservation.orderNumber,
+            reservation.customerName,
+            reservation.customerPhone || "–",
+            reservation.customerEmail,
+            `${reservation.movieTitle} (${reservation.theaterName})`,
+            formatStartTime(reservation.startTime),
+            reservation.seats.map(formatSeat).join(", "),
+            reservation.isPaid ? "Paid" : "Not paid",
+        ].forEach((value) => {
+            const td = document.createElement("td");
+            td.textContent = value;
+            row.appendChild(td);
+        });
+
+        const actionCell = document.createElement("td");
+        const viewButton = document.createElement("button");
+        viewButton.type = "button";
+        viewButton.textContent = "View";
+        viewButton.addEventListener("click", () => onSelect(reservation));
+        actionCell.appendChild(viewButton);
+        row.appendChild(actionCell);
+
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    // NY: tabellen kan scrolles vandret på små skærme
+    const scroll = document.createElement("div");
+    scroll.className = "table-scroll";
+    scroll.appendChild(table);
+    wrapper.appendChild(scroll);
+
+    return wrapper;
+}
+
+function buildReservationDetails(reservation) {
     const details = document.createElement("div");
     details.className = "reservation-details";
 
@@ -55,7 +141,8 @@ function buildReservationDetails(reservation, resultContainer) {
         <p class="status"></p>
     `;
     details.querySelector(".title").textContent = `Order number ${reservation.orderNumber}`;
-    details.querySelector(".customer").textContent = `Customer: ${reservation.customerName} (${reservation.customerEmail})`;
+    details.querySelector(".customer").textContent =
+        `Customer: ${reservation.customerName}, ${reservation.customerPhone || "no phone"}, ${reservation.customerEmail}`;
     details.querySelector(".showing").textContent =
         `${reservation.movieTitle} – ${reservation.theaterName} – ${formatStartTime(reservation.startTime)}`;
     details.querySelector(".seats").textContent = `Seats: ${seatLabels}`;
@@ -73,11 +160,9 @@ function buildReservationDetails(reservation, resultContainer) {
             ticketButton.disabled = true; // så man ikke kan klikke to gange
             try {
                 const ticket = await createTicket(reservation.orderNumber);
-                // Erstatter reservationen med billetten
-                resultContainer.replaceChildren(buildTicket(ticket));
+                details.replaceWith(buildTicket(ticket));
             } catch (error) {
                 ticketButton.disabled = false;
-                // 400 = ReservationAlreadyPaidException fra backend
                 details.appendChild(createErrorNode(
                     error.message.includes("400")
                         ? "A ticket has already been created for this reservation."
