@@ -1,7 +1,8 @@
 "use strict";
 
 
-import { getReservation, createTicket } from "../api/kinoApi.js"; // NY: funktionerne fra fil 7
+import { getReservation, createTicket } from "../api/kinoApi.js";
+import { formatSeat, formatDateTime as formatStartTime } from "../components/poster.js";
 
 export async function renderReservationsSection(container) {
     const searchForm = document.createElement("form");
@@ -13,9 +14,11 @@ export async function renderReservationsSection(container) {
     orderInput.name = "orderNumber";
     orderInput.placeholder = "Order number";
     orderInput.required = true;
+    orderInput.setAttribute("aria-label", "Order number");
 
     const searchButton = document.createElement("button");
     searchButton.type = "submit";
+    searchButton.className = "btn-primary";
     searchButton.textContent = "Find reservation";
 
     searchForm.append(orderInput, searchButton);
@@ -57,11 +60,11 @@ function buildReservationDetails(reservation, resultContainer) {
     details.querySelector(".title").textContent = `Order number ${reservation.orderNumber}`;
     details.querySelector(".customer").textContent = `Customer: ${reservation.customerName} (${reservation.customerEmail})`;
     details.querySelector(".showing").textContent =
-        `${reservation.movieTitle} – ${reservation.theaterName} – ${formatStartTime(reservation.startTime)}`;
+        `${reservation.movieTitle} · ${reservation.theaterName} · ${formatStartTime(reservation.startTime)}`;
     details.querySelector(".seats").textContent = `Seats: ${seatLabels}`;
     details.querySelector(".status").textContent = reservation.isPaid
         ? "A ticket has already been created for this reservation."
-        : "Not paid – no ticket yet.";
+        : "Not paid yet. No ticket has been created.";
 
     if (!reservation.isPaid) {
         const ticketButton = document.createElement("button");
@@ -113,21 +116,13 @@ function buildTicket(ticket) {
     const card = template.content.firstElementChild.cloneNode(true);
 
     card.querySelector(".movie").textContent = ticket.movieTitle;
-    card.querySelector(".time").textContent = `${ticket.theaterName} – ${formatStartTime(ticket.startTime)}`;
+    card.querySelector(".time").textContent = `${ticket.theaterName} · ${formatStartTime(ticket.startTime)}`;
     card.querySelector(".ticket-seats").textContent = `Seats: ${ticket.seats.map(formatSeat).join(", ")}`;
     card.querySelector(".price").textContent = `Total: ${Number(ticket.totalPrice).toFixed(2)} kr.`;
-    card.querySelector(".order").textContent = `Order ${ticket.orderNumber} – ${ticket.customerName}`;
+    card.querySelector(".order").textContent = `Order ${ticket.orderNumber} · ${ticket.customerName}`;
 
     wrapper.appendChild(card);
     return wrapper;
-}
-
-function formatSeat(seat) {
-    return `${String.fromCharCode(64 + seat.seatRow)}${seat.seatNumber}`;
-}
-
-function formatStartTime(startTime) {
-    return startTime ? new Date(startTime).toLocaleString("da-DK") : "Unknown time";
 }
 
 function createErrorNode(text) {

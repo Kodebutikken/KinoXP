@@ -1,6 +1,7 @@
 package com.kodebutikken.kinoxp.components;
 
 import com.kodebutikken.kinoxp.dto.LoginResponse;
+import com.kodebutikken.kinoxp.model.Role;
 import com.kodebutikken.kinoxp.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -25,7 +26,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
 
         if(session != null) {
             LoginResponse loginResponse = (LoginResponse) session.getAttribute("LOGGED_IN_USER");
-            if (loginResponse != null && loginResponse.role().equals("ADMINISTRATOR")) {
+            if (loginResponse != null && loginResponse.role() == Role.ADMINISTRATOR) {
                 return true;
             }
         }

@@ -30,7 +30,7 @@ public class ShowingController {
         );
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ShowingResponse> createShowing(
             @Valid @RequestBody ShowingRequest showingRequest) {
 

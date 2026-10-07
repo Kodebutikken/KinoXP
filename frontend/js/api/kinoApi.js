@@ -99,7 +99,7 @@ export async function createReservation(reservationData) {
     });
 }
 export async function addShowing(showingData) {
-    return await request("/showings", {
+    return await request("/showings/create", {
         method: "POST",
         body: JSON.stringify(showingData),
     });
