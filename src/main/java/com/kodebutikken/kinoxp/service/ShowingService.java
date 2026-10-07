@@ -46,17 +46,14 @@ public class ShowingService {
 
     public ShowingResponse createShowing(ShowingRequest showingRequest) {
 
-        Movie movie = movieRepository.findById(showingRequest.movieId())
-                .orElseThrow(() ->
-                        new MovieNotFoundException("Movie not found"));
+        Movie movie = getMovie(showingRequest.movieId());
 
-        Theater theater = theaterRepository.findById(showingRequest.theaterId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Theater not found"));
+        Theater theater = getTheater(showingRequest.theaterId());
 
-        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
-            throw new ShowingConflictException("There is already a showing in this theater at this time.");
-        }
+        checkForShowingConflict(
+                theater.getId(),
+                showingRequest.startTime()
+        );
 
         Showing showing = new Showing();
 
@@ -71,24 +68,21 @@ public class ShowingService {
     }
 
     public Showing updateShowing(Long id, ShowingRequest showingRequest) {
-        if(showingRequest == null) {
+        if (showingRequest == null) {
             throw new IllegalArgumentException("Showing request cannot be empty");
         }
 
         Showing existingShowing = showingRepository.findById(id)
                 .orElseThrow(() -> new ShowingNotFoundException("Showing with id " + id + "does not exist"));
 
-        Movie movie = movieRepository.findById(showingRequest.movieId())
-                .orElseThrow(() ->
-                        new MovieNotFoundException("Movie not found"));
+        Movie movie = getMovie(showingRequest.movieId());
 
-        Theater theater = theaterRepository.findById(showingRequest.theaterId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Theater not found"));
+        Theater theater = getTheater(showingRequest.theaterId());
 
-        if(showingRepository.existsByTheaterIdAndStartTime(showingRequest.theaterId(), showingRequest.startTime())) {
-            throw new ShowingConflictException("There is already a showing in this theater at this time.");
-        }
+        checkForShowingConflict(
+                theater.getId(),
+                showingRequest.startTime()
+        );
 
         existingShowing.setMovie(movie);
         existingShowing.setTheater(theater);
@@ -145,10 +139,31 @@ public class ShowingService {
                     generatedShowings.add(showing);
 
                 } catch (ShowingConflictException e) {
+                    // Der findes allerede en forestilling på dette tidspunkt, så den springes over.
                 }
             }
         }
 
         return generatedShowings;
+    }
+
+    private Movie getMovie(Long movieId) {
+        return movieRepository.findById(movieId)
+                .orElseThrow(() ->
+                        new MovieNotFoundException("Movie not found"));
+    }
+
+    private Theater getTheater(Long theaterId) {
+        return theaterRepository.findById(theaterId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Theater not found"));
+    }
+
+    private void checkForShowingConflict(Long theaterId, LocalDateTime startTime) {
+        if (showingRepository.existsByTheaterIdAndStartTime(theaterId, startTime)) {
+            throw new ShowingConflictException(
+                    "There is already a showing in this theater at this time."
+            );
+        }
     }
 }
