@@ -130,6 +130,16 @@ export async function cancelTicket(orderNumber, seatId, email) {
             method: "DELETE"
         })
 }
+
+export async function searchReservations({ orderNumber, name, phone, email } = {}) {
+    const query = new URLSearchParams();
+    if (orderNumber) query.set("orderNumber", orderNumber);
+    if (name) query.set("name", name);
+    if (phone) query.set("phone", phone);
+    if (email) query.set("email", email);
+    return await request(`/reservations/search?${query}`);
+}
+
 export async function getReservation(orderNumber) {
     return await request(`/reservations/${encodeURIComponent(orderNumber)}`);
 }

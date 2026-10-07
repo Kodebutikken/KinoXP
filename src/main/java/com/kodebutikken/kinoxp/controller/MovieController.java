@@ -1,7 +1,5 @@
 package com.kodebutikken.kinoxp.controller;
 
-
-import com.kodebutikken.kinoxp.dto.MovieForm;
 import com.kodebutikken.kinoxp.dto.MovieRequest;
 import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.model.Movie;
@@ -52,8 +50,8 @@ public class MovieController {
     }
 
     @PutMapping ("/{id}/edit")
-    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieForm movieForm) {
-        Movie movie = movieService.updateMovie(id, movieForm);
+    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieRequest movieRequest) {
+        Movie movie = movieService.updateMovie(id, movieRequest);
         return ResponseEntity.ok(movie);
     }
 
