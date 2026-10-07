@@ -26,6 +26,7 @@ const compiledRoutes = routes.map(compileRoute);
 
 let renderToken = 0;
 
+
 function compileRoute(route) {
     const paramNames = [];
     const pattern = route.path
@@ -64,6 +65,7 @@ function matchRoute(pathname) {
 export function navigate(path) {
     if (path !== window.location.pathname + window.location.search) {
         window.history.pushState(null, "", path);
+        window.scrollTo(0, 0);
     }
     render();
 }
@@ -132,9 +134,7 @@ async function render() {
         }
     }
 
-    const loadingNode = document.createElement("p");
-    loadingNode.textContent = "Loading data...";
-    appContainer.replaceChildren(loadingNode);
+    appContainer.replaceChildren(createLoadingSkeleton());
 
     try {
         const viewNode = await matched.route.view({ params: matched.params, query });
@@ -147,14 +147,34 @@ async function render() {
 
         await updateNavbar();
 
-        appContainer.focus();
+        // preventScroll: ellers scroller browseren <main> op under headeren
+        appContainer.focus({ preventScroll: true });
     } catch (error) {
         if (token !== renderToken) return;
 
         console.error("Error while loading view:", error);
         const alertNode = document.createElement("p");
         alertNode.className = "error";
-        alertNode.textContent = "Error while loading.";
+        alertNode.textContent = "This page could not be loaded. Please try again.";
         appContainer.replaceChildren(alertNode);
     }
+}
+
+// Skeleton i samme form som en typisk side, i stedet for en "Loading..."-tekst
+function createLoadingSkeleton() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "page-loading";
+    wrapper.setAttribute("aria-busy", "true");
+    wrapper.setAttribute("aria-label", "Loading");
+    wrapper.innerHTML = `
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-line"></div>
+        <div class="skeleton-grid">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+        </div>
+    `;
+    return wrapper;
 }

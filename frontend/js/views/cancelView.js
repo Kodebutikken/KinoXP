@@ -1,4 +1,6 @@
 import { fetchCustomerReservations, cancelTicket } from "../api/kinoApi.js";
+import { formatSeat, formatDateTime } from "../components/poster.js";
+import { showToast } from "../components/toast.js";
 
 const CANCELLATION_DEADLINE_HOURS = 24;
 
@@ -6,23 +8,48 @@ export async function createCancelView() {
     const container = document.createElement("section");
     container.className = "cancel-page";
 
-    const heading = document.createElement("h1");
-    heading.textContent = "Cancel tickets";
-    container.appendChild(heading);
+    const layout = document.createElement("div");
+    layout.className = "cancel-layout";
+
+    const intro = document.createElement("div");
+    intro.innerHTML = `
+        <h1>Cancel tickets</h1>
+        <p class="page-lead">Find your reservation with the order number from your booking, then choose which seats to cancel.</p>
+        <ul class="cancel-rules">
+            <li>Tickets can be cancelled until ${CANCELLATION_DEADLINE_HOURS} hours before the showing.</li>
+            <li>Paid tickets cannot be cancelled online.</li>
+            <li>You can cancel some seats and keep the rest.</li>
+        </ul>
+    `;
+
+    const side = document.createElement("div");
 
     const form = document.createElement("form");
     form.className = "booking-form";
     form.innerHTML = `
-        <input name="orderNumber" type="number" placeholder="Order number" min="100000" max="999999" required>
-        <input name="name" type="text" placeholder="Name" required>
-        <input name="email" type="email" placeholder="Email" required>
+        <label class="field">
+            <span class="field-label">Order number</span>
+            <input name="orderNumber" type="number" inputmode="numeric" placeholder="6 digits" min="100000" max="999999" required>
+        </label>
+        <label class="field">
+            <span class="field-label">Name</span>
+            <input name="name" type="text" autocomplete="name" required>
+        </label>
+        <label class="field">
+            <span class="field-label">E-mail</span>
+            <input name="email" type="email" autocomplete="email" required>
+        </label>
         <button type="submit" class="confirm-booking">Find my tickets</button>
     `;
-    container.appendChild(form);
+    side.appendChild(form);
 
     const results = document.createElement("div");
     results.className = "cancel-results";
-    container.appendChild(results);
+    results.setAttribute("aria-live", "polite");
+    side.appendChild(results);
+
+    layout.append(intro, side);
+    container.appendChild(layout);
 
     let currentOrderNumber = null;
     let currentEmail = null;
@@ -37,7 +64,7 @@ export async function createCancelView() {
             // Også når den sidste billet er annulleret – så findes reservationen ikke længere
             const errorNode = document.createElement("p");
             errorNode.className = "error";
-            errorNode.textContent = "No reservation found with this order number, name and email.";
+            errorNode.textContent = "No reservation matches this order number, name and e-mail.";
             results.appendChild(errorNode);
         }
     }
@@ -50,8 +77,9 @@ export async function createCancelView() {
             for (const seat of selectedSeats) {
                 await cancelTicket(reservation.orderNumber, seat.id, currentEmail);
             }
+            showToast(`Seat(s) ${seatLabels} cancelled.`);
         } catch (error) {
-            alert("One or more tickets could not be cancelled.");
+            showToast("One or more tickets could not be cancelled.", "error");
         }
         await loadReservation();
     }
@@ -87,7 +115,8 @@ function createReservationCard(reservation, onCancel) {
     card.appendChild(title);
 
     const info = document.createElement("p");
-    info.textContent = `Order #${reservation.orderNumber} – ${reservation.theaterName} – ${startTime.toLocaleString("da-DK")}`;
+    info.className = "info";
+    info.textContent = `Order ${reservation.orderNumber} · ${reservation.theaterName} · ${formatDateTime(reservation.startTime)}`;
     card.appendChild(info);
 
     if (blockedReason) {
@@ -103,7 +132,7 @@ function createReservationCard(reservation, onCancel) {
     const cancelButton = document.createElement("button");
     cancelButton.type = "button";
     cancelButton.className = "confirm-booking";
-    cancelButton.textContent = "Cancel tickets";
+    cancelButton.textContent = "Cancel selected seats";
     cancelButton.disabled = true;
 
     const checkboxes = [];
@@ -113,10 +142,11 @@ function createReservationCard(reservation, onCancel) {
     }
 
     reservation.seats.forEach((seat) => {
-        const seatLabel = `${String.fromCharCode(64 + seat.seatRow)}${seat.seatNumber}`;
+        const seatLabel = formatSeat(seat);
 
         const item = document.createElement("li");
         const label = document.createElement("label");
+        label.className = "check-label";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -127,7 +157,7 @@ function createReservationCard(reservation, onCancel) {
         checkboxes.push(checkbox);
 
         label.appendChild(checkbox);
-        label.append(` Seat ${seatLabel}`);
+        label.append(`Seat ${seatLabel}`);
         item.appendChild(label);
         list.appendChild(item);
     });

@@ -9,8 +9,13 @@ export async function createLoginView() {
     container.classList.add("login-container");
 
     const title = document.createElement("h1");
-    title.textContent = "Login";
+    title.textContent = "Staff login";
     container.appendChild(title);
+
+    const lead = document.createElement("p");
+    lead.className = "page-lead";
+    lead.textContent = "Sign in to manage movies, showings and reservations.";
+    container.appendChild(lead);
 
     const loginForm = document.createElement("form");
     loginForm.classList.add("login-form");
@@ -19,32 +24,34 @@ export async function createLoginView() {
     usernameDiv.classList.add("form-group");
 
     const usernameLabel = document.createElement("label");
-    usernameLabel.textContent = "Username:";
+    usernameLabel.textContent = "Username";
     usernameLabel.classList.add("form-label");
     const usernameInput = document.createElement("input");
     usernameInput.type = "text";
     usernameInput.name = "username";
     usernameInput.required = true;
+    usernameInput.autocomplete = "username";
     usernameInput.classList.add("form-input");
     usernameLabel.appendChild(usernameInput);
     usernameDiv.appendChild(usernameLabel);
     loginForm.appendChild(usernameDiv);
 
     const passwordLabel = document.createElement("label");
-    passwordLabel.textContent = "Password:";
+    passwordLabel.textContent = "Password";
     passwordLabel.classList.add("form-label");
     const passwordInput = document.createElement("input");
     passwordInput.type = "password";
     passwordInput.name = "password";
     passwordInput.required = true;
+    passwordInput.autocomplete = "current-password";
     passwordInput.classList.add("form-input");
     passwordLabel.appendChild(passwordInput);
     loginForm.appendChild(passwordLabel);
 
     const errorMessage = document.createElement("p");
     errorMessage.classList.add("error-message");
-    errorMessage.style.color = "red";
-    errorMessage.style.display = "none";
+    errorMessage.setAttribute("role", "alert");
+    errorMessage.hidden = true;
     loginForm.appendChild(errorMessage);
 
     const formActions = document.createElement("div");
@@ -53,13 +60,13 @@ export async function createLoginView() {
 
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
-    submitButton.textContent = "Login";
+    submitButton.textContent = "Log in";
     submitButton.classList.add("form-btn-prim-fw");
     formActions.appendChild(submitButton);
 
     loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        errorMessage.style.display = "none";
+        errorMessage.hidden = true;
 
         const username = usernameInput.value.trim();
         const password = passwordInput.value;
@@ -81,8 +88,8 @@ export async function createLoginView() {
             }
 
         } catch (error) {
-            errorMessage.textContent = "Invalid username or password.";
-            errorMessage.style.display = "block";
+            errorMessage.textContent = "Wrong username or password. Please try again.";
+            errorMessage.hidden = false;
         }
     });
 

@@ -1,18 +1,60 @@
 "use strict";
 
-import { searchReservations, createTicket } from "../api/kinoApi.js"; // ÆNDRET: searchReservations i stedet for getReservation
+
+import { searchReservations, createTicket } from "../api/kinoApi.js";
+import { formatSeat, formatDateTime as formatStartTime } from "../components/poster.js";
+
 
 export async function renderReservationsSection(container) {
     const searchForm = document.createElement("form");
-    searchForm.className = "reservation-search";
-    searchForm.innerHTML = `
-        <input name="orderNumber" type="number" placeholder="Order number">
-        <input name="name" type="text" placeholder="Name">
-        <input name="phone" type="tel" placeholder="Phone">
-        <input name="email" type="email" placeholder="Email">
-        <button type="submit">Search</button>
-        <button type="button" class="clear-search">Show all</button>
-    `;
+    searchForm.className = "form-filters";
+
+    const filtersRow = document.createElement("div");
+    filtersRow.className = "filters-row";
+    searchForm.appendChild(filtersRow);
+
+    const orderInput = document.createElement("input");
+    orderInput.type = "number";
+    orderInput.min = "1";
+    orderInput.name = "orderNumber";
+    orderInput.placeholder = "Order number";
+    orderInput.setAttribute("aria-label", "Order number");
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.name = "name";
+    nameInput.placeholder = "Name";
+    nameInput.setAttribute("aria-label", "Name");
+
+    const phoneInput = document.createElement("input");
+    phoneInput.type = "tel";
+    phoneInput.name = "phone";
+    phoneInput.placeholder = "Phone";
+    phoneInput.setAttribute("aria-label", "Phone");
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.name = "email";
+    emailInput.placeholder = "Email";
+    emailInput.setAttribute("aria-label", "Email");
+
+    const searchButton = document.createElement("button");
+    searchButton.type = "submit";
+    searchButton.className = "btn-primary";
+    searchButton.textContent = "Search";
+
+    const showAllButton = document.createElement("button");
+    showAllButton.type = "button";
+    showAllButton.className = "btn-secondary clear-search";
+    showAllButton.textContent = "Show all";
+    showAllButton.addEventListener("click", async () => {
+        searchForm.reset();
+        currentSearch = {};
+        await showList();
+    });
+
+    filtersRow.append(orderInput, nameInput, phoneInput, emailInput, searchButton, showAllButton);
+
     container.appendChild(searchForm);
 
     const resultContainer = document.createElement("div");
@@ -48,12 +90,6 @@ export async function renderReservationsSection(container) {
             phone: formData.get("phone").trim(),
             email: formData.get("email").trim(),
         };
-        await showList();
-    });
-
-    searchForm.querySelector(".clear-search").addEventListener("click", async () => {
-        searchForm.reset();
-        currentSearch = {};
         await showList();
     });
 
@@ -144,11 +180,11 @@ function buildReservationDetails(reservation) {
     details.querySelector(".customer").textContent =
         `Customer: ${reservation.customerName}, ${reservation.customerPhone || "no phone"}, ${reservation.customerEmail}`;
     details.querySelector(".showing").textContent =
-        `${reservation.movieTitle} – ${reservation.theaterName} – ${formatStartTime(reservation.startTime)}`;
+        `${reservation.movieTitle} · ${reservation.theaterName} · ${formatStartTime(reservation.startTime)}`;
     details.querySelector(".seats").textContent = `Seats: ${seatLabels}`;
     details.querySelector(".status").textContent = reservation.isPaid
         ? "A ticket has already been created for this reservation."
-        : "Not paid – no ticket yet.";
+        : "Not paid yet. No ticket has been created.";
 
     if (!reservation.isPaid) {
         const ticketButton = document.createElement("button");
@@ -163,6 +199,7 @@ function buildReservationDetails(reservation) {
                 details.replaceWith(buildTicket(ticket));
             } catch (error) {
                 ticketButton.disabled = false;
+                // 400 = ReservationAlreadyPaidException fra backend
                 details.appendChild(createErrorNode(
                     error.message.includes("400")
                         ? "A ticket has already been created for this reservation."
@@ -198,21 +235,13 @@ function buildTicket(ticket) {
     const card = template.content.firstElementChild.cloneNode(true);
 
     card.querySelector(".movie").textContent = ticket.movieTitle;
-    card.querySelector(".time").textContent = `${ticket.theaterName} – ${formatStartTime(ticket.startTime)}`;
+    card.querySelector(".time").textContent = `${ticket.theaterName} · ${formatStartTime(ticket.startTime)}`;
     card.querySelector(".ticket-seats").textContent = `Seats: ${ticket.seats.map(formatSeat).join(", ")}`;
     card.querySelector(".price").textContent = `Total: ${Number(ticket.totalPrice).toFixed(2)} kr.`;
-    card.querySelector(".order").textContent = `Order ${ticket.orderNumber} – ${ticket.customerName}`;
+    card.querySelector(".order").textContent = `Order ${ticket.orderNumber} · ${ticket.customerName}`;
 
     wrapper.appendChild(card);
     return wrapper;
-}
-
-function formatSeat(seat) {
-    return `${String.fromCharCode(64 + seat.seatRow)}${seat.seatNumber}`;
-}
-
-function formatStartTime(startTime) {
-    return startTime ? new Date(startTime).toLocaleString("da-DK") : "Unknown time";
 }
 
 function createErrorNode(text) {

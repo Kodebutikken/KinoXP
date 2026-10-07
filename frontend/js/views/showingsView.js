@@ -1,6 +1,8 @@
 "use strict";
 
-import {fetchMovies, fetchShowings, deleteShowing, addShowing} from "../api/kinoApi.js";
+import {fetchMovies, fetchShowings, deleteShowing} from "../api/kinoApi.js";
+import { createPoster, movieMeta, formatDateTime, formatTime } from "../components/poster.js";
+import { showToast } from "../components/toast.js";
 
 /**
  * Offentlig visning af forestillinger for en film
@@ -11,9 +13,12 @@ export async function createShowingsView({ params }) {
 
     const movieId = params ? params.movieId : null;
 
-    const heading = document.createElement("h1");
-    heading.textContent = "Showing times";
-    container.appendChild(heading);
+    const backLink = document.createElement("a");
+    backLink.className = "back-link";
+    backLink.href = "/movies";
+    backLink.setAttribute("data-link", "");
+    backLink.textContent = "← All movies";
+    container.appendChild(backLink);
 
     if (!movieId) {
         const errorNode = document.createElement("p");
@@ -23,43 +28,132 @@ export async function createShowingsView({ params }) {
         return container;
     }
 
-    const showings = await fetchShowings(movieId);
+    // Der findes ikke et endpoint for én film med MovieResponse, så vi finder den i listen
+    const [showings, movies] = await Promise.all([
+        fetchShowings(movieId),
+        fetchMovies().catch(() => []),
+    ]);
 
-    if (!showings || showings.length === 0) {
+    const movie = (movies || []).find((m) => String(m.id) === String(movieId))
+        || { id: movieId, title: showings?.[0]?.movieTitle || "Showing times" };
+
+    container.appendChild(createShowingsHero(movie));
+
+    const upcoming = (showings || [])
+        .map((showing) => ({ ...showing, start: new Date(showing.startTime) }))
+        .filter((showing) => showing.start >= new Date())
+        .sort((a, b) => a.start - b.start);
+
+    if (upcoming.length === 0) {
         const noShowingsNode = document.createElement("p");
-        noShowingsNode.textContent = "No showings available.";
+        noShowingsNode.className = "page-lead";
+        noShowingsNode.textContent = "There are no upcoming showings for this movie yet.";
         container.appendChild(noShowingsNode);
         return container;
     }
 
-    heading.textContent = `Showing times – ${showings[0].movieTitle || ""}`;
-
-    const grid = document.createElement("div");
-    grid.className = "showings-grid";
-
-    const template = document.createElement("template");
-
-    showings.forEach((showing) => {
-        template.innerHTML = `
-        <div class="showing-card">
-            <p class="date-time"></p>
-            <p class="theater"></p>
-            <a class="link" href="" data-link>Choose seats</a>
-        </div>
-        `;
-
-        const card = template.content.firstElementChild.cloneNode(true);
-
-        card.querySelector(".date-time").textContent = formatStartTime(showing.startTime);
-        card.querySelector(".theater").textContent = showing.theaterName || "Unknown theater";
-        card.querySelector(".link").href = `/showings/${showing.id}/book`;
-
-        grid.appendChild(card);
+    const byDay = new Map();
+    upcoming.forEach((showing) => {
+        const key = showing.start.toDateString();
+        if (!byDay.has(key)) byDay.set(key, []);
+        byDay.get(key).push(showing);
     });
 
-    container.appendChild(grid);
+    const days = document.createElement("div");
+    days.className = "showings-days";
+
+    byDay.forEach((dayShowings) => {
+        const date = dayShowings[0].start;
+
+        const row = document.createElement("div");
+        row.className = "showings-day";
+
+        const label = document.createElement("p");
+        label.className = "showings-day-label";
+        label.textContent = date.toLocaleDateString("en-GB", { weekday: "long" });
+        const dateText = document.createElement("span");
+        dateText.textContent = date.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+        label.appendChild(dateText);
+
+        const times = document.createElement("div");
+        times.className = "time-list";
+        dayShowings.forEach((showing) => times.appendChild(createTimeChip(showing)));
+
+        row.append(label, times);
+        days.appendChild(row);
+    });
+
+    container.appendChild(days);
 
     return container;
+}
+
+function createShowingsHero(movie) {
+    const hero = document.createElement("header");
+    hero.className = "showings-hero";
+
+    const text = document.createElement("div");
+
+    const heading = document.createElement("h1");
+    heading.textContent = movie.title || "Showing times";
+    text.appendChild(heading);
+
+    if (movie.durationMinutes || movie.movieGenre) {
+        const meta = document.createElement("p");
+        meta.className = "showings-meta";
+        meta.textContent = movieMeta(movie);
+        text.appendChild(meta);
+    }
+
+    if (movie.description) {
+        const description = document.createElement("p");
+        description.className = "showings-description";
+        description.textContent = movie.description;
+        text.appendChild(description);
+    }
+
+    hero.append(createPoster(movie), text);
+    return hero;
+}
+
+function createTimeChip(showing) {
+    const chip = document.createElement("a");
+    chip.className = "time-chip";
+    chip.href = `/showings/${showing.id}/book`;
+    chip.setAttribute("data-link", "");
+    chip.setAttribute("aria-label", `Choose seats for ${formatDateTime(showing.startTime)}`);
+
+    const time = document.createElement("span");
+    time.className = "time-chip-time";
+    time.textContent = formatTime(showing.start);
+
+    const theater = document.createElement("span");
+    theater.className = "time-chip-theater";
+    theater.textContent = showing.theaterName || "";
+
+    chip.append(time, theater);
+    return chip;
+}
+
+// Pakker et felt ind i en <label>, så det har en synlig tekst og ikke kun en placeholder
+function createField(labelText, input, hint) {
+    const label = document.createElement("label");
+    label.className = "field";
+
+    const text = document.createElement("span");
+    text.className = "field-label";
+    text.textContent = labelText;
+
+    label.append(text, input);
+
+    if (hint) {
+        const hintNode = document.createElement("p");
+        hintNode.className = "field-hint";
+        hintNode.textContent = hint;
+        label.appendChild(hintNode);
+    }
+
+    return label;
 }
 
 /**
@@ -70,8 +164,8 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
 
     const formHeading = document.createElement("h2");
     formHeading.textContent = isEdit
-        ? `Edit Showing: ${showing.movieTitle || ""}`
-        : "Create New Showing";
+        ? `Edit showing: ${showing.movieTitle || ""}`
+        : "Create new showing";
     container.appendChild(formHeading);
 
     const form = document.createElement("form");
@@ -85,7 +179,7 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
     const placeholderOption = document.createElement("option");
     placeholderOption.value = "";
     placeholderOption.className = "optional-field";
-    placeholderOption.textContent = "Select Movie";
+    placeholderOption.textContent = "Select movie";
     placeholderOption.disabled = true;
     placeholderOption.selected = !showing?.movieId;
     movieInput.appendChild(placeholderOption);
@@ -100,17 +194,16 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
         }
         movieInput.appendChild(option);
     });
-    form.appendChild(movieInput);
+    form.appendChild(createField("Movie", movieInput));
 
     // Theater input (der er ikke noget theaters-endpoint endnu, så vi bruger id)
     const theaterInput = document.createElement("input");
     theaterInput.type = "number";
     theaterInput.name = "theaterId";
-    theaterInput.placeholder = "Theater ID";
+    theaterInput.placeholder = "1";
     theaterInput.min = "1";
     theaterInput.value = showing?.theaterId ?? "";
     theaterInput.required = true;
-    form.appendChild(theaterInput);
 
     // Start time input
     const startTimeInput = document.createElement("input");
@@ -118,15 +211,23 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
     startTimeInput.name = "startTime";
     startTimeInput.value = showing?.startTime ? showing.startTime.slice(0, 16) : "";
     startTimeInput.required = true;
-    form.appendChild(startTimeInput);
+
+    const row = document.createElement("div");
+    row.className = "field-row";
+    row.append(
+        createField("Theater ID", theaterInput),
+        createField("Start time", startTimeInput, "Must be in the future.")
+    );
+    form.appendChild(row);
 
     // Extra checkbox
     const extraLabel = document.createElement("label");
+    extraLabel.className = "check-label";
     const extraInput = document.createElement("input");
     extraInput.type = "checkbox";
     extraInput.name = "extra";
     extraInput.checked = Boolean(showing?.extra);
-    extraLabel.append(extraInput, " Extra showing");
+    extraLabel.append(extraInput, "Extra showing");
     form.appendChild(extraLabel);
 
     // Buttons container
@@ -136,7 +237,7 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
     submitButton.className = "btn-primary";
-    submitButton.textContent = isEdit ? "Update Showing" : "Create Showing";
+    submitButton.textContent = isEdit ? "Save changes" : "Create showing";
     buttonGroup.appendChild(submitButton);
 
     if (onCancel) {
@@ -162,7 +263,12 @@ export async function renderShowingForm(container, { showing = null, onSubmit, o
         };
 
         if (onSubmit) {
-            await onSubmit(showingData);
+            submitButton.disabled = true;
+            try {
+                await onSubmit(showingData);
+            } finally {
+                submitButton.disabled = false;
+            }
         }
     });
 
@@ -184,10 +290,11 @@ const WEEKDAYS = [
  */
 export async function renderScheduleForm(container, { onSubmit, onCancel } = {}) {
     const formHeading = document.createElement("h2");
-    formHeading.textContent = "Generate Showings";
+    formHeading.textContent = "Generate showings";
     container.appendChild(formHeading);
 
     const info = document.createElement("p");
+    info.className = "page-lead";
     info.textContent = "Creates showings for the next 3 months on the chosen weekdays and times. Times that conflict with existing showings are skipped.";
     container.appendChild(info);
 
@@ -201,7 +308,7 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
 
     const placeholderOption = document.createElement("option");
     placeholderOption.value = "";
-    placeholderOption.textContent = "Select Movie";
+    placeholderOption.textContent = "Select movie";
     placeholderOption.disabled = true;
     placeholderOption.selected = true;
     movieInput.appendChild(placeholderOption);
@@ -213,26 +320,35 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
         option.textContent = movie.title;
         movieInput.appendChild(option);
     });
-    form.appendChild(movieInput);
 
     // Theater input
     const theaterInput = document.createElement("input");
     theaterInput.type = "number";
     theaterInput.name = "theaterId";
-    theaterInput.placeholder = "Theater ID";
+    theaterInput.placeholder = "1";
     theaterInput.min = "1";
     theaterInput.required = true;
-    form.appendChild(theaterInput);
+
+    const topRow = document.createElement("div");
+    topRow.className = "field-row";
+    topRow.append(createField("Movie", movieInput), createField("Theater ID", theaterInput));
+    form.appendChild(topRow);
 
     // Extra checkbox
     const extraLabel = document.createElement("label");
+    extraLabel.className = "check-label";
     const extraInput = document.createElement("input");
     extraInput.type = "checkbox";
     extraInput.name = "extra";
-    extraLabel.append(extraInput, " Extra showings");
+    extraLabel.append(extraInput, "Extra showings");
     form.appendChild(extraLabel);
 
     // Schedule rows (weekday + time)
+    const scheduleLabel = document.createElement("span");
+    scheduleLabel.className = "field-label";
+    scheduleLabel.textContent = "Weekly time slots";
+    form.appendChild(scheduleLabel);
+
     const scheduleList = document.createElement("div");
     scheduleList.className = "schedule-list";
     form.appendChild(scheduleList);
@@ -244,6 +360,7 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
         const daySelect = document.createElement("select");
         daySelect.name = "day";
         daySelect.required = true;
+        daySelect.setAttribute("aria-label", "Weekday");
         WEEKDAYS.forEach(([value, label]) => {
             const option = document.createElement("option");
             option.value = value;
@@ -255,9 +372,11 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
         timeInput.type = "time";
         timeInput.name = "time";
         timeInput.required = true;
+        timeInput.setAttribute("aria-label", "Time");
 
         const removeButton = document.createElement("button");
         removeButton.type = "button";
+        removeButton.className = "btn-secondary btn-small";
         removeButton.textContent = "Remove";
         removeButton.addEventListener("click", () => {
             if (scheduleList.children.length > 1) row.remove();
@@ -271,7 +390,8 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
 
     const addRowButton = document.createElement("button");
     addRowButton.type = "button";
-    addRowButton.textContent = "Add time slot";
+    addRowButton.className = "btn-tertiary";
+    addRowButton.textContent = "+ Add time slot";
     addRowButton.addEventListener("click", addScheduleRow);
     form.appendChild(addRowButton);
 
@@ -281,12 +401,14 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
 
     const submitButton = document.createElement("button");
     submitButton.type = "submit";
-    submitButton.textContent = "Generate Showings";
+    submitButton.className = "btn-primary";
+    submitButton.textContent = "Generate showings";
     buttonGroup.appendChild(submitButton);
 
     if (onCancel) {
         const cancelButton = document.createElement("button");
         cancelButton.type = "button";
+        cancelButton.className = "btn-secondary";
         cancelButton.textContent = "Cancel";
         cancelButton.addEventListener("click", onCancel);
         buttonGroup.appendChild(cancelButton);
@@ -312,12 +434,12 @@ export async function renderScheduleForm(container, { onSubmit, onCancel } = {})
 
         if (onSubmit) {
             submitButton.disabled = true;
-            submitButton.textContent = "Generating...";
+            submitButton.textContent = "Generating…";
             try {
                 await onSubmit(scheduleData);
             } finally {
                 submitButton.disabled = false;
-                submitButton.textContent = "Generate Showings";
+                submitButton.textContent = "Generate showings";
             }
         }
     });
@@ -336,10 +458,11 @@ export async function renderShowingsSection(container, { onEditShowing, selected
 
         const movieSelect = document.createElement("select");
         movieSelect.name = "movieFilter";
+        movieSelect.setAttribute("aria-label", "Movie");
 
         const placeholderOption = document.createElement("option");
         placeholderOption.value = "";
-        placeholderOption.textContent = "Select movie to see showings";
+        placeholderOption.textContent = "Select a movie to see its showings";
         placeholderOption.disabled = true;
         placeholderOption.selected = !selectedMovieId;
         movieSelect.appendChild(placeholderOption);
@@ -373,7 +496,7 @@ export async function renderShowingsSection(container, { onEditShowing, selected
                 console.error("Error while loading showings for admin:", error);
                 const alertNode = document.createElement("p");
                 alertNode.className = "error";
-                alertNode.textContent = "Error while loading showings.";
+                alertNode.textContent = "Could not load showings. Please try again.";
                 tableWrapper.appendChild(alertNode);
             }
         }
@@ -390,14 +513,15 @@ export async function renderShowingsSection(container, { onEditShowing, selected
         console.error("Error while loading movies for admin:", error);
         const alertNode = document.createElement("p");
         alertNode.className = "error";
-        alertNode.textContent = "Error while loading movies.";
+        alertNode.textContent = "Could not load movies. Please try again.";
         container.appendChild(alertNode);
     }
 }
 
 function createNoShowingsNode() {
     const node = document.createElement("p");
-    node.textContent = "No showings for this movie.";
+    node.className = "page-lead";
+    node.textContent = "No showings for this movie yet.";
     return node;
 }
 
@@ -429,7 +553,7 @@ function buildShowingsTable(showings, onEditShowing) {
         const theaterCell = document.createElement("td");
         theaterCell.textContent = showing.theaterName || "";
         const timeCell = document.createElement("td");
-        timeCell.textContent = formatStartTime(showing.startTime);
+        timeCell.textContent = formatDateTime(showing.startTime);
         const extraCell = document.createElement("td");
         extraCell.textContent = showing.extra ? "Yes" : "No";
 
@@ -438,6 +562,7 @@ function buildShowingsTable(showings, onEditShowing) {
         // Edit button
         const editButton = document.createElement("button");
         editButton.type = "button";
+        editButton.className = "btn-secondary btn-small";
         editButton.textContent = "Edit";
         editButton.addEventListener("click", () => {
             if (onEditShowing) onEditShowing(showing);
@@ -447,20 +572,21 @@ function buildShowingsTable(showings, onEditShowing) {
         // Delete button
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
+        deleteButton.className = "btn-secondary btn-small btn-danger";
         deleteButton.textContent = "Delete";
         deleteButton.addEventListener("click", async () => {
-            const label = `${showing.movieTitle || "showing"} (${formatStartTime(showing.startTime)})`;
+            const label = `${showing.movieTitle || "showing"} (${formatDateTime(showing.startTime)})`;
             if (confirm(`Are you sure you want to delete the showing "${label}"?`)) {
                 try {
                     await deleteShowing(showing.id);
-                    alert("Showing has been deleted.");
+                    showToast("The showing was deleted.");
                     row.remove();
                     if (tbody.children.length === 0) {
                         table.replaceWith(createNoShowingsNode());
                     }
                 } catch (error) {
                     console.error("Error while deleting the showing:", error);
-                    alert("Failed to delete the showing.");
+                    showToast("Could not delete the showing. Please try again.", "error");
                 }
             }
         });
@@ -472,8 +598,4 @@ function buildShowingsTable(showings, onEditShowing) {
 
     table.appendChild(tbody);
     return table;
-}
-
-function formatStartTime(startTime) {
-    return startTime ? new Date(startTime).toLocaleString("da-DK") : "Unknown time";
 }

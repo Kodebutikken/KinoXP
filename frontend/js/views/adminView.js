@@ -5,11 +5,12 @@ import { addMovie, updateMovie, addShowing, updateShowing, generateShowings } fr
 import { renderMovieForm, renderMoviesSection } from "./moviesView.js";
 import { renderReservationsSection } from "./reservationsView.js";
 import { renderShowingForm, renderScheduleForm, renderShowingsSection } from "./showingsView.js";
+import { showToast } from "../components/toast.js";
 
 const SECTIONS = {
-    movies: { title: "Movies", render: renderMoviesSection },
-    showings: { title: "Showings", render: renderShowingsSection },
-    reservations: { title: "Reservations", render: renderReservationsSection },
+    movies: { title: "Movies", description: "Add new titles, edit details and switch movies on or off.", render: renderMoviesSection },
+    showings: { title: "Showings", description: "Plan single showings or generate a weekly schedule.", render: renderShowingsSection },
+    reservations: { title: "Reservations", description: "Look up an order and create the ticket.", render: renderReservationsSection },
 };
 
 export async function createAdminView({ params }) {
@@ -29,13 +30,13 @@ export async function createAdminView({ params }) {
 
     const heading = document.createElement("h1");
     heading.className = "admin-heading";
-    heading.textContent = `Admin – ${sectionConfig.title}`;
+    heading.textContent = sectionConfig.title;
 
     const backLink = document.createElement("a");
     backLink.href = "/admin";
     backLink.setAttribute("data-link", "");
     backLink.className = "admin-back-link";
-    backLink.textContent = "← Back to admin";
+    backLink.textContent = "← Admin overview";
 
     // Husker valgt film i showings-tabellen, så valget overlever, når viewet tegnes forfra
     let selectedShowingsMovieId = null;
@@ -45,6 +46,9 @@ export async function createAdminView({ params }) {
         container.appendChild(heading);
         container.appendChild(backLink);
 
+        const toolbar = document.createElement("div");
+        toolbar.className = "admin-toolbar";
+
         if (section === "movies") {
             const createButton = document.createElement("button");
             createButton.type = "button";
@@ -53,26 +57,31 @@ export async function createAdminView({ params }) {
             createButton.addEventListener("click", () => {
                 showFormView(null);
             });
-            container.appendChild(createButton);
+            toolbar.appendChild(createButton);
         }
 
         if (section === "showings") {
             const createButton = document.createElement("button");
             createButton.type = "button";
-            createButton.className = "btn-secondary";
+            createButton.className = "btn-primary";
             createButton.textContent = "Create new showing";
             createButton.addEventListener("click", () => {
                 showShowingFormView();
             });
-            container.appendChild(createButton);
+            toolbar.appendChild(createButton);
 
             const generateButton = document.createElement("button");
             generateButton.type = "button";
+            generateButton.className = "btn-secondary";
             generateButton.textContent = "Generate showings";
             generateButton.addEventListener("click", () => {
                 showScheduleFormView();
             });
-            container.appendChild(generateButton);
+            toolbar.appendChild(generateButton);
+        }
+
+        if (toolbar.children.length > 0) {
+            container.appendChild(toolbar);
         }
 
         await sectionConfig.render(container, {
@@ -98,15 +107,15 @@ export async function createAdminView({ params }) {
                     try {
                         if (movieToEdit) {
                             await updateMovie(movieToEdit.id, movieData);
-                            alert(`Movie "${movieData.title}" has been updated.`);
+                            showToast(`"${movieData.title}" was updated.`);
                         } else {
                             const createdMovie = await addMovie(movieData);
-                            alert(`New movie created with title: ${createdMovie.title}`);
+                            showToast(`"${createdMovie.title}" was created.`);
                         }
                         await showSectionView();
                     } catch (error) {
                         console.error("Error while saving movie:", error);
-                        alert("Failed to save movie.");
+                        showToast("Could not save the movie. Please try again.", "error");
                     }
                 },
                 onCancel: () => {
@@ -115,7 +124,7 @@ export async function createAdminView({ params }) {
             });
         } catch (error) {
             console.error("Error while rendering movie form:", error);
-            alert("Failed to load form. Please try again.");
+            showToast("Could not load the form. Please try again.", "error");
             await showSectionView();
         }
     }
@@ -132,19 +141,21 @@ export async function createAdminView({ params }) {
                     try {
                         if (showingToEdit) {
                             await updateShowing(showingToEdit.id, showingData);
-                            alert("Showing has been updated.");
+                            showToast("The showing was updated.");
                         } else {
                             const createdShowing = await addShowing(showingData);
-                            alert(`New showing created for: ${createdShowing.movieTitle || "movie"}`);
+                            showToast(`New showing created for ${createdShowing.movieTitle || "the movie"}.`);
                         }
                         selectedShowingsMovieId = String(showingData.movieId);
                         await showSectionView();
                     } catch (error) {
                         console.error("Error while saving showing:", error);
                         if (error.message.includes("400")) {
-                            alert("Failed to save showing. Check that all fields are filled out and the start time is in the future.");
+                            showToast("Could not save the showing. Check that all fields are filled out and the start time is in the future.", "error");
+                        } else if (error.message.includes("409")) {
+                            showToast("Could not save the showing. There is already a showing at this time.", "error");
                         } else {
-                            alert("Failed to save showing.");
+                            showToast("Could not save the showing. Please try again.", "error");
                         }
                     }
                 },
@@ -154,7 +165,7 @@ export async function createAdminView({ params }) {
             });
         } catch (error) {
             console.error("Error while rendering showing form:", error);
-            alert("Failed to load form. Please try again.");
+            showToast("Could not load the form. Please try again.", "error");
             await showSectionView();
         }
     }
@@ -169,12 +180,12 @@ export async function createAdminView({ params }) {
                 onSubmit: async (scheduleData) => {
                     try {
                         const generated = await generateShowings(scheduleData);
-                        alert(`${generated.length} showings were created.`);
+                        showToast(`${generated.length} showings were created.`);
                         selectedShowingsMovieId = String(scheduleData.movieId);
                         await showSectionView();
                     } catch (error) {
                         console.error("Error while generating showings:", error);
-                        alert("Failed to generate showings.");
+                        showToast("Could not generate showings. Please try again.", "error");
                     }
                 },
                 onCancel: () => {
@@ -183,7 +194,7 @@ export async function createAdminView({ params }) {
             });
         } catch (error) {
             console.error("Error while rendering schedule form:", error);
-            alert("Failed to load form. Please try again.");
+            showToast("Could not load the form. Please try again.", "error");
             await showSectionView();
         }
     }
@@ -200,10 +211,10 @@ function renderDashboard() {
     heading.textContent = "Admin";
     container.appendChild(heading);
 
-    const banner = document.createElement("p");
-    banner.className = "placeholder-banner";
-    banner.textContent = "Administrative tools are a work in progress.";
-    container.appendChild(banner);
+    const lead = document.createElement("p");
+    lead.className = "page-lead";
+    lead.textContent = "Manage the program and help customers with their reservations.";
+    container.appendChild(lead);
 
     const grid = document.createElement("div");
     grid.className = "admin-dashboard-grid";
@@ -213,17 +224,16 @@ function renderDashboard() {
         card.className = "admin-dashboard-card";
         card.href = `/admin/${key}`;
         card.setAttribute("data-link", "");
-        card.textContent = config.title;
+
+        const title = document.createElement("strong");
+        title.textContent = config.title;
+        const description = document.createElement("span");
+        description.textContent = config.description;
+        card.append(title, description);
         grid.appendChild(card);
     });
 
     container.appendChild(grid);
 
     return container;
-}
-
-async function renderComingSoonSection(container) {
-    const message = document.createElement("p");
-    message.textContent = "This section is not implemented yet.";
-    container.appendChild(message);
 }
