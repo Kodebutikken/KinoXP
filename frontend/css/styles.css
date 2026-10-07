@@ -1259,6 +1259,10 @@ input[type="checkbox"] {
     margin-top: 1rem;
 }
 
+.back-button {
+    margin-bottom: 1rem;
+}
+
 .form-filters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
