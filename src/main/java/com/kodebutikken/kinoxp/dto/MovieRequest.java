@@ -2,6 +2,7 @@ package com.kodebutikken.kinoxp.dto;
 
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
 
 public record MovieRequest(
         @NotBlank(message = "Title must be filled out")
@@ -21,6 +22,9 @@ public record MovieRequest(
 
         @NotNull(message = "Genre is required")
         MovieGenre movieGenre,
+
+        @URL(message = "Cover URL must be a valid URL")
+        String coverUrl,
 
         boolean active
 ) {

@@ -32,10 +32,8 @@ public class MovieService {
         movie.setDurationMinutes(movieRequest.durationMinutes());
         movie.setAgeLimit(movieRequest.ageLimit());
         movie.setDescription(movieRequest.description());
-
-        //Tilføjet genre og status
         movie.setMovieGenre(movieRequest.movieGenre());
-        //Sætter nye film til aktiv
+        movie.setCoverUrl(movieRequest.coverUrl());
         movie.setActive(true);
 
         movieRepository.save(movie);
@@ -71,8 +69,7 @@ public class MovieService {
         existingMovie.setDurationMinutes(movieRequest.durationMinutes());
         existingMovie.setAgeLimit(movieRequest.ageLimit());
         existingMovie.setDescription(movieRequest.description());
-
-        //Tilføjet at man kan sætte genre
+        existingMovie.setCoverUrl(movieRequest.coverUrl());
         existingMovie.setMovieGenre(movieRequest.movieGenre());
 
         return movieRepository.save(existingMovie);

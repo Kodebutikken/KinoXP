@@ -9,6 +9,7 @@ public record MovieResponse(
         Integer ageLimit,
         String description,
         String movieGenre,
+        String coverUrl,
         boolean active
 ) {
     public static MovieResponse from(Movie movie) {
@@ -19,6 +20,7 @@ public record MovieResponse(
                 movie.getAgeLimit(),
                 movie.getDescription(),
                 movie.getMovieGenre() != null ? movie.getMovieGenre().name() : null,
+                movie.getCoverUrl(),
                 movie.isActive()
         );
     }

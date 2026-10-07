@@ -150,10 +150,10 @@ export async function createAdminView({ params }) {
                         await showSectionView();
                     } catch (error) {
                         console.error("Error while saving showing:", error);
-                        if (error.message.includes("400")) {
-                            showToast("Could not save the showing. Check that all fields are filled out and the start time is in the future.", "error");
-                        } else if (error.message.includes("409")) {
-                            showToast("Could not save the showing. There is already a showing at this time.", "error");
+                        if (error.status === 400) {
+                            showToast(error.message, "error");
+                        } else if (error.status === 409) {
+                            showToast(error.message, "error");
                         } else {
                             showToast("Could not save the showing. Please try again.", "error");
                         }

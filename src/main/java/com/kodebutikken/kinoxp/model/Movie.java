@@ -23,6 +23,8 @@ public class Movie {
     @Enumerated(EnumType.STRING)
     private MovieGenre movieGenre;
 
+    private String coverUrl;
+
     private boolean active;
 
 }

@@ -7,7 +7,6 @@ import { createBookingView } from "./views/bookingView.js";
 import { createAdminView } from "./views/adminView.js";
 import { createNotFoundView } from "./views/notFoundView.js";
 import { createLoginView } from "./views/loginView.js";
-import { getCurrentUser } from "./api/kinoApi.js";
 import {fetchCurrentUser, updateNavbar} from "./components/navbar.js";
 import { createCancelView } from "./views/cancelView.js";
 
@@ -18,7 +17,7 @@ const routes = [
     { path: "/showings/:showingId/book", view: createBookingView, title: "Book seats" },
     { path: "/admin", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
     { path: "/admin/:section", view: createAdminView, title: "Admin", requiresAuth: true, allowedRoles: ["ADMINISTRATOR"], protected: true },
-    { path: "/auth/login", view: createLoginView, title: "Login" },
+    { path: "/auth/login", view: createLoginView, title: "Login", redirectAuthenticatedTo: "/admin" },
     { path: "/cancel", view: createCancelView, title: "Cancel Tickets" },
 ];
 
@@ -130,6 +129,15 @@ async function render() {
         if (matched.route.allowedRoles && !matched.route.allowedRoles.includes(user.role)) {
             console.warn("Unauthorized acces attempt: ", pathname);
             navigate("/"); // Omdiriger til forsiden hvis de ikke har den rette rolle
+            return;
+        }
+    }
+
+    if (matched.route.redirectAuthenticatedTo) {
+        const user = await fetchCurrentUser();
+
+        if (user?.role === "ADMINISTRATOR") {
+            navigate(matched.route.redirectAuthenticatedTo);
             return;
         }
     }
