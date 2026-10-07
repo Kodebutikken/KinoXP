@@ -1259,6 +1259,19 @@ input[type="checkbox"] {
     margin-top: 1rem;
 }
 
+.form-filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+}
+
+.filters-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.6rem;
+}
+
 /* =========================================================
    404
    ========================================================= */

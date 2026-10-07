@@ -7,30 +7,54 @@ import { formatSeat, formatDateTime as formatStartTime } from "../components/pos
 
 export async function renderReservationsSection(container) {
     const searchForm = document.createElement("form");
-    searchForm.className = "reservation-search";
+    searchForm.className = "form-filters";
+
+    const filtersRow = document.createElement("div");
+    filtersRow.className = "filters-row";
+    searchForm.appendChild(filtersRow);
 
     const orderInput = document.createElement("input");
     orderInput.type = "number";
     orderInput.min = "1";
     orderInput.name = "orderNumber";
     orderInput.placeholder = "Order number";
-    orderInput.required = true;
     orderInput.setAttribute("aria-label", "Order number");
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.name = "name";
+    nameInput.placeholder = "Name";
+    nameInput.setAttribute("aria-label", "Name");
+
+    const phoneInput = document.createElement("input");
+    phoneInput.type = "tel";
+    phoneInput.name = "phone";
+    phoneInput.placeholder = "Phone";
+    phoneInput.setAttribute("aria-label", "Phone");
+
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.name = "email";
+    emailInput.placeholder = "Email";
+    emailInput.setAttribute("aria-label", "Email");
 
     const searchButton = document.createElement("button");
     searchButton.type = "submit";
     searchButton.className = "btn-primary";
-    searchButton.textContent = "Find reservation";
+    searchButton.textContent = "Search";
 
-    searchForm.append(orderInput, searchButton);
-    searchForm.innerHTML = `
-        <input name="orderNumber" type="number" placeholder="Order number">
-        <input name="name" type="text" placeholder="Name">
-        <input name="phone" type="tel" placeholder="Phone">
-        <input name="email" type="email" placeholder="Email">
-        <button type="submit">Search</button>
-        <button type="button" class="clear-search">Show all</button>
-    `;
+    const showAllButton = document.createElement("button");
+    showAllButton.type = "button";
+    showAllButton.className = "btn-secondary clear-search";
+    showAllButton.textContent = "Show all";
+    showAllButton.addEventListener("click", async () => {
+        searchForm.reset();
+        currentSearch = {};
+        await showList();
+    });
+
+    filtersRow.append(orderInput, nameInput, phoneInput, emailInput, searchButton, showAllButton);
+
     container.appendChild(searchForm);
 
     const resultContainer = document.createElement("div");
@@ -66,12 +90,6 @@ export async function renderReservationsSection(container) {
             phone: formData.get("phone").trim(),
             email: formData.get("email").trim(),
         };
-        await showList();
-    });
-
-    searchForm.querySelector(".clear-search").addEventListener("click", async () => {
-        searchForm.reset();
-        currentSearch = {};
         await showList();
     });
 
