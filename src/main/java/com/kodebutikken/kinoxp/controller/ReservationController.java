@@ -59,4 +59,15 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(reservationService.createTicket(orderNumber));
     }
+
+    // Admin ser alle aktive reservationer og kan søge i dem.
+    // Alle fire parametre er valgfrie, og udfyldes flere, skal alle passe
+    @GetMapping("/search")
+    public ResponseEntity<List<ReservationResponse>> searchActiveReservations(
+            @RequestParam(required = false) Long orderNumber,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email) {
+        return ResponseEntity.ok(reservationService.searchActiveReservations(orderNumber, name, phone, email));
+    }
 }

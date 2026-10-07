@@ -15,7 +15,8 @@ public record ReservationResponse (
         String customerName,
         String customerEmail,
         boolean isPaid,
-        List<SeatResponse> seats
+        List<SeatResponse> seats,
+        String customerPhone
 )
 {
     public static ReservationResponse from(Reservation reservation, List<Seat> seats) {
@@ -28,7 +29,8 @@ public record ReservationResponse (
                 reservation.getCustomer().getName(),
                 reservation.getCustomer().getEmail(),
                 reservation.isPaid(),
-                seats.stream().map(SeatResponse::from).toList()
+                seats.stream().map(SeatResponse::from).toList(),
+                reservation.getCustomer().getPhone()
         );
     }
 }

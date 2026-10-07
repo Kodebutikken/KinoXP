@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +66,7 @@ public class ReservationService {
         }
 
         // Tjekker at ingen af sæderne allerede er booket til forestillingen
-        if(reservationSeatRepository.existsByShowingIdAndSeatIdIn(showing.getId(), uniqueSeatIds)) {
+        if (reservationSeatRepository.existsByShowingIdAndSeatIdIn(showing.getId(), uniqueSeatIds)) {
             throw new IllegalArgumentException("One or more seats are already booked for this showing.");
         }
 
@@ -139,7 +140,7 @@ public class ReservationService {
     private static final int CANCELLATION_DEADLINE_HOURS = 24;
 
     @Transactional(readOnly = true)
-    public ReservationResponse getReservationForCustomer (Long orderNumber, String email, String name) {
+    public ReservationResponse getReservationForCustomer(Long orderNumber, String email, String name) {
         Reservation reservation = findByOrderNumber(orderNumber);
 
         boolean emailMatches = reservation.getCustomer().getEmail().equalsIgnoreCase(email.trim());
@@ -154,19 +155,19 @@ public class ReservationService {
     }
 
     @Transactional
-    public void cancelTicket(Long orderNumber, Long seatId, String email){
+    public void cancelTicket(Long orderNumber, Long seatId, String email) {
         Reservation reservation = findByOrderNumber(orderNumber);
 
         if (!reservation.getCustomer().getEmail().equalsIgnoreCase(email.trim())) {
             throw new ReservationNotFoundException("Reservation not found for the provided email: " + email);
         }
 
-        if(reservation.isPaid()) {
+        if (reservation.isPaid()) {
             throw new IllegalArgumentException("Cannot cancel a paid reservation.");
         }
 
         LocalDateTime deadline = reservation.getShowing().getStartTime().minusHours(CANCELLATION_DEADLINE_HOURS);
-        if(LocalDateTime.now().isAfter(deadline)) {
+        if (LocalDateTime.now().isAfter(deadline)) {
             throw new IllegalArgumentException("Cannot cancel reservation within 24 hours of the showing.");
         }
 
@@ -176,7 +177,7 @@ public class ReservationService {
 
         reservationSeatRepository.delete(ticket);
 
-        if(reservationSeatRepository.findByReservationId(reservation.getId()).isEmpty()){
+        if (reservationSeatRepository.findByReservationId(reservation.getId()).isEmpty()) {
             reservationRepository.delete(reservation);
         }
     }
@@ -189,6 +190,21 @@ public class ReservationService {
         // Beregner den samlede pris for reservationen baseret på antallet af sæder og prisen pr. billet (Pris er fastsat til 100 kr. pr. billet)
         BigDecimal totalPrice = TICKET_PRICE.multiply(BigDecimal.valueOf(reservation.seats().size()));
         return TicketResponse.from(reservation, totalPrice);
+    }
+
+    // Admin ser alle reservationer (der ikke er startet endnu)
+    // Kan søge på ordrenummer, navn, telefon og e-mail. Tomme felter ignoreres
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> searchActiveReservations(Long orderNumber, String name, String phone, String email) {
+        List<ReservationResponse> result = new ArrayList<>();
+
+        for (Reservation reservation : reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(LocalDateTime.now())) {
+            if (matchesSearch(reservation, orderNumber, name, phone, email)) {
+                result.add(ReservationResponse.from(reservation, getSeats(reservation.getId())));
+            }
+        }
+
+        return result;
     }
 
 
@@ -211,4 +227,22 @@ public class ReservationService {
         return reservationRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new ReservationNotFoundException("Reservation not found: " + orderNumber));
     }
+
+    // tjekker om reservationen passer med søgningen Alle udfyldte felter skal matche
+    private boolean matchesSearch(Reservation reservation, Long orderNumber, String name, String phone, String email) {
+        Customer customer = reservation.getCustomer();
+
+        return (orderNumber == null || orderNumber.equals(reservation.getOrderNumber()))
+                && fieldMatches(name, customer.getName())
+                && fieldMatches(phone, customer.getPhone())
+                && fieldMatches(email, customer.getEmail());
+    }
+
+    private boolean fieldMatches(String search, String value) {
+        if (search == null || search.isBlank()) {
+            return true;
+        }
+        return value != null && search.trim().equalsIgnoreCase(value.trim());
+    }
+
 }
