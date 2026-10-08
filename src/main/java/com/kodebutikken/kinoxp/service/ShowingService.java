@@ -52,7 +52,8 @@ public class ShowingService {
 
         checkForShowingConflict(
                 theater.getId(),
-                showingRequest.startTime()
+                showingRequest.startTime(),
+                movie.getDurationMinutes()
         );
 
         Showing showing = new Showing();
@@ -81,7 +82,8 @@ public class ShowingService {
 
         checkForShowingConflict(
                 theater.getId(),
-                showingRequest.startTime()
+                showingRequest.startTime(),
+                movie.getDurationMinutes()
         );
 
         existingShowing.setMovie(movie);
@@ -159,11 +161,33 @@ public class ShowingService {
                         new IllegalArgumentException("Theater not found"));
     }
 
-    private void checkForShowingConflict(Long theaterId, LocalDateTime startTime) {
-        if (showingRepository.existsByTheaterIdAndStartTime(theaterId, startTime)) {
-            throw new ShowingConflictException(
-                    "There is already a showing in this theater at this time."
-            );
+    private void checkForShowingConflict(
+            Long theaterId,
+            LocalDateTime startTime,
+            int durationMinutes
+    ) {
+        LocalDateTime newShowingEnd = startTime.plusMinutes(durationMinutes);
+
+        List<Showing> existingShowings =
+                showingRepository.findByTheaterId(theaterId);
+
+        for (Showing showing : existingShowings) {
+
+            LocalDateTime existingStart = showing.getStartTime();
+
+            LocalDateTime existingEnd = existingStart
+                    .plusMinutes(showing.getMovie().getDurationMinutes())
+                    .plusMinutes(10);
+
+            // Den nye showing starter, mens den eksisterende
+            // showing + buffer stadig er i gang
+            if (startTime.isBefore(existingEnd)
+                    && newShowingEnd.isAfter(existingStart)) {
+
+                throw new ShowingConflictException(
+                        "There is already a showing in this theater during this time."
+                );
+            }
         }
     }
 }
