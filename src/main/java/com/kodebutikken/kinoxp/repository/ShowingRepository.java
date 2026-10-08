@@ -18,4 +18,6 @@ public interface ShowingRepository extends JpaRepository<Showing, Long> {
             Long theaterId,
             LocalDateTime startTime
     );
+
+    List<Showing> findByTheaterId(Long theaterId);
 }
