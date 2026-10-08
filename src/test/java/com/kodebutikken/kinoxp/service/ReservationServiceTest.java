@@ -16,7 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.kodebutikken.kinoxp.dto.TicketResponse;
-import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
 import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
@@ -496,5 +495,128 @@ public class ReservationServiceTest {
         assertEquals(1, result.size());
         assertEquals(111111L, result.get(0).orderNumber());
 
+    }
+
+    @Test
+    void getReservationForCustomer_shouldReturnReservation_whenEmailAndNameMatch() {
+        Reservation reservation = existingReservation(false);
+
+        when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(reservation));
+        when(reservationSeatRepository.findByReservationId(42L)).thenReturn(List.of(
+                new ReservationSeat(reservation, seatA1, showing)));
+
+        ReservationResponse response =
+                reservationService.getReservationForCustomer(482913L, " MADS@example.com ", "  mads hansen ");
+
+        assertEquals(482913L, response.orderNumber());
+        assertEquals(1, response.seats().size());
+    }
+
+    @Test
+    void getReservationForCustomer_shouldThrow_whenEmailDoesNotMatch() {
+        when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(false)));
+
+        assertThrows(ReservationNotFoundException.class,
+                () -> reservationService.getReservationForCustomer(482913L, "someone@example.com", "Mads Hansen"));
+    }
+
+    @Test
+    void getReservationForCustomer_shouldThrow_whenNameDoesNotMatch() {
+        when(reservationRepository.findByOrderNumber(482913L)).thenReturn(Optional.of(existingReservation(false)));
+
+        assertThrows(ReservationNotFoundException.class,
+                () -> reservationService.getReservationForCustomer(482913L, "mads@example.com", "Ida Jensen"));
+    }
+
+    @Test
+    void getReservationForCustomer_shouldThrow_whenReservationDoesNotExist() {
+        when(reservationRepository.findByOrderNumber(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationNotFoundException.class,
+                () -> reservationService.getReservationForCustomer(99L, "mads@example.com", "Mads Hansen"));
+    }
+
+
+    private List<Reservation> twoActiveReservations() {
+        Customer mads = new Customer();
+        mads.setName("Mads Hansen");
+        mads.setPhone("20304050");
+        mads.setEmail("mads@example.com");
+
+        Customer ida = new Customer();
+        ida.setName("Ida Jensen");
+        ida.setPhone("11223344");
+        ida.setEmail("ida@example.com");
+
+        Reservation madsReservation = new Reservation();
+        madsReservation.setId(1L);
+        madsReservation.setOrderNumber(111111L);
+        madsReservation.setShowing(showing);
+        madsReservation.setCustomer(mads);
+
+        Reservation idaReservation = new Reservation();
+        idaReservation.setId(2L);
+        idaReservation.setOrderNumber(222222L);
+        idaReservation.setShowing(showing);
+        idaReservation.setCustomer(ida);
+
+        return List.of(madsReservation, idaReservation);
+    }
+
+    @Test
+    void searchActiveReservations_shouldFindByOrderNumber() {
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(twoActiveReservations());
+        when(reservationSeatRepository.findByReservationId(2L)).thenReturn(List.of());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(222222L, null, null, null);
+
+        assertEquals(1, result.size());
+        assertEquals(222222L, result.get(0).orderNumber());
+    }
+
+    @Test
+    void searchActiveReservations_shouldFindByPhone() {
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(twoActiveReservations());
+        when(reservationSeatRepository.findByReservationId(1L)).thenReturn(List.of());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(null, null, "20304050", null);
+
+        assertEquals(1, result.size());
+        assertEquals(111111L, result.get(0).orderNumber());
+    }
+
+    @Test
+    void searchActiveReservations_shouldFindByEmail_ignoringCase() {
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(twoActiveReservations());
+        when(reservationSeatRepository.findByReservationId(2L)).thenReturn(List.of());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(null, null, null, "IDA@Example.com");
+
+        assertEquals(1, result.size());
+        assertEquals(222222L, result.get(0).orderNumber());
+    }
+
+    @Test
+    void searchActiveReservations_shouldRequireAllFilledFieldsToMatch() {
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(twoActiveReservations());
+
+        List<ReservationResponse> result =
+                reservationService.searchActiveReservations(null, "Mads Hansen", "11223344", null);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void searchActiveReservations_shouldReturnEmptyList_whenNothingMatches() {
+        when(reservationRepository.findByShowingStartTimeAfterOrderByShowingStartTimeAsc(any(LocalDateTime.class)))
+                .thenReturn(twoActiveReservations());
+
+        List<ReservationResponse> result = reservationService.searchActiveReservations(999999L, null, null, null);
+
+        assertTrue(result.isEmpty());
     }
 }
