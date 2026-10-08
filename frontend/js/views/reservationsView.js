@@ -65,6 +65,7 @@ export async function renderReservationsSection(container) {
     async function showList() {
         resultContainer.replaceChildren();
         try {
+            searchForm.style.display = "block";
             const reservations = await searchReservations(currentSearch);
             resultContainer.appendChild(buildReservationList(reservations, showReservation));
         } catch (error) {
@@ -75,10 +76,12 @@ export async function renderReservationsSection(container) {
     function showReservation(reservation) {
         const backButton = document.createElement("button");
         backButton.type = "button";
+        backButton.className = "btn-secondary back-button";
         backButton.textContent = "← Back to list";
         backButton.addEventListener("click", showList);
 
         resultContainer.replaceChildren(backButton, buildReservationDetails(reservation));
+        searchForm.style.display = "none";
     }
 
     searchForm.addEventListener("submit", async (event) => {

@@ -61,6 +61,7 @@ class ShowingServiceTest {
                 0,
                 "Ren action",
                 MovieGenre.ACTION,
+                null,
                 true
         );
 

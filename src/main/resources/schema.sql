@@ -22,6 +22,7 @@ CREATE TABLE movie
     duration_minutes INT          NOT NULL,
     age_limit        INT          NOT NULL,
     description      TEXT,
+    coverUrl         VARCHAR(255),
     active           BOOLEAN      NOT NULL DEFAULT TRUE
 );
 

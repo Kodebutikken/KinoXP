@@ -157,7 +157,7 @@ function createHeroSlide(movie) {
     slide.querySelector(".home-hero-title").textContent = movie.title || "Untitled";
     slide.querySelector(".home-hero-meta").textContent = movieMeta(movie);
     slide.querySelector(".home-hero-description").textContent = movie.description || "";
-    primary.textContent = "Buy tickets";
+    primary.textContent = "Reserve tickets";
     primary.href = `/movies/${movie.id}/showings`;
     slide.querySelector(".home-hero-poster").appendChild(createPoster(movie));
 

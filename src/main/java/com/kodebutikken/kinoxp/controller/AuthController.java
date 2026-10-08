@@ -23,6 +23,7 @@ public class AuthController {
 
         HttpSession session = request.getSession(true);
         session.setAttribute("LOGGED_IN_USER", loginResponse);
+        session.setMaxInactiveInterval(30 * 60);
 
         return ResponseEntity.ok(loginResponse);
     }
