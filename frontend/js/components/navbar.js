@@ -6,6 +6,10 @@ let cachedUser = null;
 let isUserFetched = false;
 
 export async function fetchCurrentUser() {
+    if (isUserFetched) {
+        return cachedUser;
+    }
+
     try {
         cachedUser = await getCurrentUser();
     } catch (error) {

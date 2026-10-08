@@ -26,7 +26,20 @@ async function request(endpoint, options = {}) {
         if(response.status === 401 && endpoint === "/auth/me") return null;
 
         if (!response.ok) {
-            throw new Error("HTTP " + response.status);
+            const text = await response.text();
+
+            let problemDetail = null;
+            if (text) {
+                try {
+                    problemDetail = JSON.parse(text);
+                } catch (error) {
+                    console.error("Error parsing problem details:", error);
+                }
+            }
+
+            const error = new Error(problemDetail?.detail || `HTTP ${response.status}`);
+            error.status = response.status;
+            throw error;
         }
 
         if (response.status === 204) return null;

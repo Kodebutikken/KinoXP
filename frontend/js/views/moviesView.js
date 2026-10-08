@@ -10,15 +10,23 @@ export async function createMoviesView() {
 
     const header = document.createElement("header");
     header.className = "page-header";
-    header.innerHTML = `
-        <h1>Movies playing right now</h1>
-        <p class="page-lead">Pick a movie to see showing times and book your seats.</p>
-    `;
+
+    const pageH1 = document.createElement("h1");
+    pageH1.textContent = "Movies playing right now";
+    header.appendChild(pageH1);
+
+    const subtitle = document.createElement("p");
+    subtitle.className = "page-lead";
+    subtitle.textContent = "Pick a movie to see showing times and book your seats.";
+    header.appendChild(subtitle);
+
     container.appendChild(header);
 
     const movies = await fetchMovies();
 
-    if (!movies || movies.length === 0) {
+    const activeMovies = (movies || []).filter((movie) => movie.active);
+
+    if (!activeMovies || activeMovies.length === 0) {
         const noMoviesNode = document.createElement("p");
         noMoviesNode.className = "page-lead";
         noMoviesNode.textContent = "No movies are playing right now. New titles are added every week.";
@@ -31,7 +39,7 @@ export async function createMoviesView() {
 
     const template = document.createElement("template");
 
-    movies.forEach((movie) => {
+    activeMovies.forEach((movie) => {
         template.innerHTML = `
         <a class="movie-card" href="" data-link>
             <div class="poster-slot"></div>
@@ -161,6 +169,15 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
     descriptionInput.value = movie?.description || "";
     form.appendChild(createField("Description", descriptionInput));
 
+    // Cover image URL input
+    const coverImageInput = document.createElement("input");
+    coverImageInput.type = "url";
+    coverImageInput.name = "coverImageUrl";
+    coverImageInput.className = "input-field";
+    coverImageInput.placeholder = "https://example.com/cover.jpg";
+    coverImageInput.value = movie?.coverUrl || "";
+    form.appendChild(createField("Cover image URL", coverImageInput, "Optional. A URL to the movie's poster image."));
+
     // Buttons container
     const buttonGroup = document.createElement("div");
     buttonGroup.className = "form-buttons";
@@ -192,6 +209,7 @@ export async function renderMovieForm(container, { movie = null, onSubmit, onCan
             ageLimit: parseInt(formData.get("ageLimit"), 10),
             description: formData.get("description"),
             movieGenre: formData.get("genre"),
+            coverUrl: formData.get("coverImageUrl"),
             active: formData.get("isActive") === "true",
         };
 

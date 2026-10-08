@@ -39,7 +39,7 @@ class MovieServiceTest {
     @Test
     void createMovie_success() {
         MovieRequest movieRequest = new MovieRequest("Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, true);
+                MovieGenre.ACTION, null, true);
 
         movieService.createMovie(movieRequest);
 
@@ -60,9 +60,9 @@ class MovieServiceTest {
     void updateMovie_success() {
         Long movieId = 1L;
         Movie existingMovie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, true);
+                MovieGenre.ACTION, null, true);
         MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18,
-                "Mere action", MovieGenre.THRILLER, true);
+                "Mere action", MovieGenre.THRILLER, null, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(existingMovie));
         when(movieRepository.save(any(Movie.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -80,8 +80,8 @@ class MovieServiceTest {
 
     @Test
     void getAllMovies_shouldReturnAllMovies() {
-        Movie batman = new Movie(1L, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
-        Movie dune = new Movie(2L, "Dune", 166, 0, "Sci-fi", MovieGenre.SCIENCE_FICTION, true);
+        Movie batman = new Movie(1L, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
+        Movie dune = new Movie(2L, "Dune", 166, 0, "Sci-fi", MovieGenre.SCIENCE_FICTION, null, true);
 
         when(movieRepository.findAll()).thenReturn(List.of(batman, dune));
 
@@ -94,7 +94,7 @@ class MovieServiceTest {
     @Test
     void getMovieById_shouldReturnMovie_whenMovieExists() {
         Long movieId = 1L;
-        Movie batman = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
+        Movie batman = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(batman));
 
@@ -115,7 +115,7 @@ class MovieServiceTest {
     @Test
     void createMovie_shouldThrow_whenTitleAlreadyExists() {
         MovieRequest movieRequest = new MovieRequest("Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, true);
+                MovieGenre.ACTION, null, true);
 
         when(movieRepository.existsByTitle("Batman")).thenReturn(true);
 
@@ -127,7 +127,7 @@ class MovieServiceTest {
     @Test
     void updateMovie_shouldThrow_whenTitleBelongsToAnotherMovie() {
         Long movieId = 1L;
-        MovieRequest movieRequest = new MovieRequest("Dune", 126, 18, "Mere action", MovieGenre.THRILLER, true);
+        MovieRequest movieRequest = new MovieRequest("Dune", 126, 18, "Mere action", MovieGenre.THRILLER, null, true);
 
         when(movieRepository.existsByTitleAndIdNot("Dune", movieId)).thenReturn(true);
 
@@ -139,7 +139,7 @@ class MovieServiceTest {
     @Test
     void updateMovie_shouldThrow_whenMovieDoesNotExist() {
         Long movieId = 99L;
-        MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18, "Mere action", MovieGenre.THRILLER, true);
+        MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18, "Mere action", MovieGenre.THRILLER, null, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
 
@@ -153,7 +153,7 @@ class MovieServiceTest {
     void deleteMovie_shouldDeleteMovieAndShowings_whenMovieIsInactive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, false);
+                MovieGenre.ACTION, null, false);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -167,7 +167,7 @@ class MovieServiceTest {
     void deleteMovie_shouldThrow_whenMovieIsActive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, true);
+                MovieGenre.ACTION, null, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -192,7 +192,7 @@ class MovieServiceTest {
     @Test
     void changeMovieStatus_shouldDeactivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, true);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -206,7 +206,7 @@ class MovieServiceTest {
     @Test
     void changeMovieStatus_shouldActivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, false);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, false);
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
