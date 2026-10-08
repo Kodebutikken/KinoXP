@@ -1,9 +1,10 @@
 package com.kodebutikken.kinoxp.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -26,5 +27,10 @@ public class Movie {
     private String coverUrl;
 
     private boolean active;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.REMOVE)
+    private List<Showing> showings = new ArrayList<>();
 
 }

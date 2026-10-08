@@ -20,6 +20,7 @@ import com.kodebutikken.kinoxp.exception.ReservationAlreadyPaidException;
 import java.math.BigDecimal;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,8 +59,8 @@ public class ReservationServiceTest {
 
     @BeforeEach
     void setUp() {
-        bigTheater = new Theater(1L, "Stor sal", 25, 16);
-        smallTheater = new Theater(2L, "Lille sal", 20, 12);
+        bigTheater = new Theater(1L, "Stor sal", 25, 16, new ArrayList<>());
+        smallTheater = new Theater(2L, "Lille sal", 20, 12, new ArrayList<>());
 
         Movie movie = new Movie();
         movie.setId(1L);

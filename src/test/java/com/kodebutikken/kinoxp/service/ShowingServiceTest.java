@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,14 +40,16 @@ class ShowingServiceTest {
                 "Ren action",
                 MovieGenre.ACTION,
                 null,
-                true
+                true,
+                new ArrayList<>()
         );
 
         Theater theater = new Theater(
                 2L,
                 "Sal 1",
                 10,
-                15
+                15,
+                new ArrayList<>()
         );
 
         LocalDateTime startTime = LocalDateTime.of(2026, 1, 1, 20, 0);
