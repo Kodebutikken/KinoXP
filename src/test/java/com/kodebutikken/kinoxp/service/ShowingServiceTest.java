@@ -43,7 +43,7 @@ class ShowingServiceTest {
 
     // NY: hjælpemetoder, så vi ikke skal bygge den samme film og sal i hver test
     private Movie movie(Long id, int durationMinutes) {
-        return new Movie(id, "Batman", durationMinutes, 0, "Ren action", MovieGenre.ACTION, true);
+        return new Movie(id, "Batman", durationMinutes, 0, "Ren action", MovieGenre.ACTION, null, true);
     }
 
     private Theater theater(Long id) {
