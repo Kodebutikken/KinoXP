@@ -9,7 +9,6 @@ import java.util.Optional;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     void deleteByShowingId(Long showingId);
-    List<Reservation> findByCustomerEmailOrderByCreatedAtDesc(String email);
     Optional<Reservation> findByOrderNumber(Long orderNumber);
     boolean existsByOrderNumber(Long orderNumber);
     List<Reservation> findByShowingStartTimeAfterOrderByShowingStartTimeAsc(LocalDateTime time);

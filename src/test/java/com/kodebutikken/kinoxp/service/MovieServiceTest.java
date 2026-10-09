@@ -21,8 +21,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-//ALT HERINDE ER AI GENERATED
-
 @ExtendWith(MockitoExtension.class)
 class MovieServiceTest {
 

@@ -14,10 +14,5 @@ public interface ShowingRepository extends JpaRepository<Showing, Long> {
     @EntityGraph(attributePaths = {"movie", "theater"})
     List<Showing> findByMovieIdOrderByStartTimeAsc(Long movieId);
 
-    boolean existsByTheaterIdAndStartTime(
-            Long theaterId,
-            LocalDateTime startTime
-    );
-
     List<Showing> findByTheaterId(Long theaterId);
 }

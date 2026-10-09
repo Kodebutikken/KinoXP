@@ -31,7 +31,6 @@ class ShowingServiceTest {
     @Mock
     private ShowingRepository showingRepository;
 
-    // NY: createShowing slår film og sal op, så de to repositories skal mockes
     @Mock
     private MovieRepository movieRepository;
 
@@ -41,7 +40,6 @@ class ShowingServiceTest {
     @InjectMocks
     private ShowingService showingService;
 
-    // NY: hjælpemetoder, så vi ikke skal bygge den samme film og sal i hver test
     private Movie movie(Long id, int durationMinutes) {
         return new Movie(id, "Batman", durationMinutes, 0, "Ren action", MovieGenre.ACTION, null, true);
     }
