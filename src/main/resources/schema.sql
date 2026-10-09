@@ -2,127 +2,111 @@ CREATE DATABASE IF NOT EXISTS cinema;
 USE cinema;
 
 -- =========================================
--- 1. CATEGORY
--- =========================================
-
-CREATE TABLE category
-(
-    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
-);
-
--- =========================================
--- 2. MOVIE
+-- 1. MOVIE
 -- =========================================
 
 CREATE TABLE movie
 (
     id               BIGINT AUTO_INCREMENT PRIMARY KEY,
-    title            VARCHAR(255) NOT NULL,
-    duration_minutes INT          NOT NULL,
-    age_limit        INT          NOT NULL,
-    description      TEXT,
-    coverUrl         VARCHAR(255),
-    active           BOOLEAN      NOT NULL DEFAULT TRUE
+    title            VARCHAR(255),
+    duration_minutes INT         NOT NULL,
+    age_limit        INT         NOT NULL,
+    description      VARCHAR(255),
+    movie_genre      VARCHAR(50), -- MovieGenre enum name (EnumType.STRING)
+    cover_url        VARCHAR(255),
+    active           BOOLEAN     NOT NULL
 );
 
 -- =========================================
--- 3. MOVIE_CATEGORY (M:N)
--- =========================================
-
-CREATE TABLE movie_category
-(
-    movie_id    BIGINT NOT NULL,
-    category_id BIGINT NOT NULL,
-
-    PRIMARY KEY (movie_id, category_id),
-    FOREIGN KEY (movie_id) REFERENCES movie (id),
-    FOREIGN KEY (category_id) REFERENCES category (id)
-);
-
--- =========================================
--- 4. THEATER
+-- 2. THEATER
 -- =========================================
 
 CREATE TABLE theater
 (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name          VARCHAR(100) NOT NULL,
-    row_count     INT          NOT NULL,
-    seats_per_row INT          NOT NULL
+    name          VARCHAR(255),
+    row_count     INT NOT NULL,
+    seats_per_row INT NOT NULL
 );
 
 -- =========================================
--- 5. SEAT
+-- 3. SEAT
 -- =========================================
 
 CREATE TABLE seat
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     theater_id  BIGINT NOT NULL,
-    seat_row    INT  NOT NULL,
-    seat_number INT  NOT NULL,
+    seat_row    INT    NOT NULL,
+    seat_number INT    NOT NULL,
 
-    FOREIGN KEY (theater_id) REFERENCES theater (id),
+    FOREIGN KEY (theater_id) REFERENCES theater (id) ON DELETE CASCADE,
     UNIQUE (theater_id, seat_row, seat_number)
 );
 
 -- =========================================
--- 6. EMPLOYEE
+-- 4. EMPLOYEE
 -- =========================================
 
 CREATE TABLE employee
 (
-    id   BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(100) NOT NULL
+    id       BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name     VARCHAR(255),
+    role     VARCHAR(50)  NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL UNIQUE
 );
 
 -- =========================================
--- 7. CUSTOMER
+-- 5. CUSTOMER
 -- =========================================
 
 CREATE TABLE customer
 (
     id    BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name  VARCHAR(255) NOT NULL,
-    phone VARCHAR(30),
-    email VARCHAR(255)
+    name  VARCHAR(255),
+    email VARCHAR(255),
+    phone VARCHAR(255)
 );
 
 -- =========================================
--- 8. SHOWING
+-- 6. SHOWING
 -- =========================================
 
 CREATE TABLE showing
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
-    movie_id   BIGINT        NOT NULL,
-    theater_id BIGINT        NOT NULL,
-    start_time DATETIME        NOT NULL,
-    is_extra   BOOLEAN     NOT NULL DEFAULT FALSE,
+    movie_id   BIGINT   NOT NULL,
+    theater_id BIGINT   NOT NULL,
+    start_time DATETIME(6),
+    is_extra   BOOLEAN  NOT NULL DEFAULT FALSE,
 
-    FOREIGN KEY (movie_id) REFERENCES movie (id),
-    FOREIGN KEY (theater_id)  REFERENCES theater (id)
+    FOREIGN KEY (movie_id) REFERENCES movie (id) ON DELETE CASCADE,
+    -- No cascade on Showing.theater: a theater with showings cannot be deleted
+    FOREIGN KEY (theater_id) REFERENCES theater (id)
 );
 
 -- =========================================
--- 9. RESERVATION
+-- 7. RESERVATION
 -- =========================================
 
 CREATE TABLE reservation
 (
-    id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-    customer_id BIGINT        NOT NULL,
-    showing_id   BIGINT        NOT NULL,
-    created_at  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    is_paid      BOOLEAN     DEFAULT FALSE,
-    order_number BIGINT     NOT NULL UNIQUE,
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+    showing_id   BIGINT      NOT NULL,
+    customer_id  BIGINT      NOT NULL,
+    created_at   DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    is_paid      BOOLEAN     NOT NULL DEFAULT FALSE,
+    order_number BIGINT      NOT NULL UNIQUE,
 
-    FOREIGN KEY (customer_id) REFERENCES customer (id),
-    FOREIGN KEY (showing_id) REFERENCES showing (id)
+    FOREIGN KEY (showing_id) REFERENCES showing (id) ON DELETE CASCADE,
+    -- No cascade on Customer.reservations: a customer with reservations cannot be deleted
+    FOREIGN KEY (customer_id) REFERENCES customer (id)
 );
 
+-- =========================================
+-- 8. RESERVATION_SEAT
+-- =========================================
 
 CREATE TABLE reservation_seat
 (
@@ -131,28 +115,9 @@ CREATE TABLE reservation_seat
     showing_id     BIGINT NOT NULL,
 
     PRIMARY KEY (reservation_id, seat_id),
-    FOREIGN KEY (reservation_id) REFERENCES reservation (id),
-    FOREIGN KEY (seat_id) REFERENCES seat (id),
-    FOREIGN KEY (showing_id) REFERENCES showing (id)
-);
-
--- =========================================
--- 10. TICKET
--- =========================================
-
-CREATE TABLE ticket
-(
-    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
-    reservation_id BIGINT           NOT NULL,
-    showing_id     BIGINT           NOT NULL,
-    seat_id        BIGINT           NOT NULL,
-    employee_id    BIGINT           NOT NULL,
-    price          DECIMAL(10, 2) NOT NULL,
-
-    FOREIGN KEY (reservation_id) REFERENCES reservation (id),
-    FOREIGN KEY (showing_id) REFERENCES showing (id),
-    FOREIGN KEY (seat_id) REFERENCES seat (id),
-    FOREIGN KEY (employee_id) REFERENCES employee (id),
-    -- A seat can only be sold once per showing
+    FOREIGN KEY (reservation_id) REFERENCES reservation (id) ON DELETE CASCADE,
+    FOREIGN KEY (seat_id) REFERENCES seat (id) ON DELETE CASCADE,
+    FOREIGN KEY (showing_id) REFERENCES showing (id) ON DELETE CASCADE,
+    -- A seat can only be reserved once per showing
     UNIQUE (showing_id, seat_id)
 );
