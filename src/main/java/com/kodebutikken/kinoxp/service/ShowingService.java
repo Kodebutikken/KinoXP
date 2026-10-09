@@ -11,10 +11,10 @@ import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.model.Theater;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
-import com.kodebutikken.kinoxp.repository.ReservationRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import com.kodebutikken.kinoxp.repository.TheaterRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,19 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ShowingService {
+
     private final ShowingRepository showingRepository;
     private final MovieRepository movieRepository;
     private final TheaterRepository theaterRepository;
-    private final ReservationRepository reservationRepository;
-
-    public ShowingService(ShowingRepository showingRepository, MovieRepository movieRepository,
-                          TheaterRepository theaterRepository, ReservationRepository reservationRepository) {
-        this.showingRepository = showingRepository;
-        this.movieRepository = movieRepository;
-        this.theaterRepository = theaterRepository;
-        this.reservationRepository = reservationRepository;
-    }
 
     public List<ShowingResponse> getShowingsForMovie(Long movieId) {
         return showingRepository.findByMovieIdOrderByStartTimeAsc(movieId)
@@ -68,7 +61,7 @@ public class ShowingService {
         return ShowingResponse.from(showing);
     }
 
-    public Showing updateShowing(Long id, ShowingRequest showingRequest) {
+    public ShowingResponse updateShowing(Long id, ShowingRequest showingRequest) {
         if (showingRequest == null) {
             throw new IllegalArgumentException("Showing request cannot be empty");
         }
@@ -91,7 +84,8 @@ public class ShowingService {
         existingShowing.setStartTime(showingRequest.startTime());
         existingShowing.setExtra(showingRequest.extra());
 
-        return showingRepository.save(existingShowing);
+        Showing updatedShowing = showingRepository.save(existingShowing);
+        return ShowingResponse.from(updatedShowing);
     }
 
     @Transactional
@@ -104,8 +98,7 @@ public class ShowingService {
                     "A showing in the past cannot be deleted"
             );
         }
-        showingRepository.deleteById(id);
-        reservationRepository.deleteByShowingId(id);
+        showingRepository.delete(showing);
     }
 
     public List<ShowingResponse> generateShowings(

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -36,4 +38,7 @@ public class Reservation {
 
     @Column (name = "order_number", nullable = false, unique = true)
     private Long orderNumber;
+
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReservationSeat> reservationSeats = new ArrayList<>();
 }

@@ -34,6 +34,6 @@ public class Showing {
     private boolean extra = false;
 
     @ToString.Exclude
-    @OneToMany(mappedBy = "showing")
+    @OneToMany(mappedBy = "showing", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
 }

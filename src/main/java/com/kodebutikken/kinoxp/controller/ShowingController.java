@@ -3,7 +3,6 @@ package com.kodebutikken.kinoxp.controller;
 import com.kodebutikken.kinoxp.dto.ShowingRequest;
 import com.kodebutikken.kinoxp.dto.ShowingResponse;
 import com.kodebutikken.kinoxp.dto.ShowingScheduleRequest;
-import com.kodebutikken.kinoxp.model.Showing;
 import com.kodebutikken.kinoxp.service.ShowingService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,9 +42,9 @@ public class ShowingController {
     }
 
     @PutMapping("/{id}/edit")
-    public ResponseEntity<Showing> updateShowing(@PathVariable Long id,
-                                                 @Valid @RequestBody ShowingRequest showingRequest) {
-        Showing showing = showingService.updateShowing(id, showingRequest);
+    public ResponseEntity<ShowingResponse> updateShowing(@PathVariable Long id,
+                                                         @Valid @RequestBody ShowingRequest showingRequest) {
+        ShowingResponse showing = showingService.updateShowing(id, showingRequest);
         return ResponseEntity.ok(showing);
     }
 

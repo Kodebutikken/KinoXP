@@ -6,7 +6,6 @@ import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
-import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,9 +26,6 @@ class MovieServiceTest {
 
     @Mock
     private MovieRepository movieRepository;
-
-    @Mock
-    private ShowingRepository showingRepository;
 
     @InjectMocks
     private MovieService movieService;
@@ -58,7 +55,7 @@ class MovieServiceTest {
     void updateMovie_success() {
         Long movieId = 1L;
         Movie existingMovie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, null, true);
+                MovieGenre.ACTION, null, true, new ArrayList<>());
         MovieRequest movieRequest = new MovieRequest("Batman Returns", 126, 18,
                 "Mere action", MovieGenre.THRILLER, null, true);
 
@@ -78,8 +75,8 @@ class MovieServiceTest {
 
     @Test
     void getAllMovies_shouldReturnAllMovies() {
-        Movie batman = new Movie(1L, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
-        Movie dune = new Movie(2L, "Dune", 166, 0, "Sci-fi", MovieGenre.SCIENCE_FICTION, null, true);
+        Movie batman = new Movie(1L, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true, new ArrayList<>());
+        Movie dune = new Movie(2L, "Dune", 166, 0, "Sci-fi", MovieGenre.SCIENCE_FICTION, null, true, new ArrayList<>());
 
         when(movieRepository.findAll()).thenReturn(List.of(batman, dune));
 
@@ -92,7 +89,7 @@ class MovieServiceTest {
     @Test
     void getMovieById_shouldReturnMovie_whenMovieExists() {
         Long movieId = 1L;
-        Movie batman = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
+        Movie batman = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true, new ArrayList<>());
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(batman));
 
@@ -151,28 +148,26 @@ class MovieServiceTest {
     void deleteMovie_shouldDeleteMovieAndShowings_whenMovieIsInactive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, null, false);
+                MovieGenre.ACTION, null, false, new ArrayList<>());
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
         movieService.deleteMovie(movieId);
 
-        verify(showingRepository).deleteByMovieId(movieId);
-        verify(movieRepository).deleteById(movieId);
+        verify(movieRepository).delete(movie);
     }
 
     @Test
     void deleteMovie_shouldThrow_whenMovieIsActive() {
         Long movieId = 1L;
         Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action",
-                MovieGenre.ACTION, null, true);
+                MovieGenre.ACTION, null, true, new ArrayList<>());
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
         assertThrows(IllegalArgumentException.class, () -> movieService.deleteMovie(movieId));
 
-        verify(showingRepository, never()).deleteByMovieId(any());
-        verify(movieRepository, never()).deleteById(any());
+        verify(movieRepository, never()).delete(any());
     }
 
     @Test
@@ -183,14 +178,14 @@ class MovieServiceTest {
 
         assertThrows(MovieNotFoundException.class, () -> movieService.deleteMovie(movieId));
 
-        verify(movieRepository, never()).deleteById(any());
+        verify(movieRepository, never()).delete(any());
     }
 
     //CHANGE STATUS
     @Test
     void changeMovieStatus_shouldDeactivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, true, new ArrayList<>());
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
@@ -204,7 +199,7 @@ class MovieServiceTest {
     @Test
     void changeMovieStatus_shouldActivateMovie() {
         Long movieId = 1L;
-        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, false);
+        Movie movie = new Movie(movieId, "Batman", 155, 0, "Ren action", MovieGenre.ACTION, null, false, new ArrayList<>());
 
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
 
