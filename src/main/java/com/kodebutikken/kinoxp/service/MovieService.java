@@ -6,18 +6,17 @@ import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class MovieService {
-    private final MovieRepository movieRepository;
 
-    public MovieService(MovieRepository movieRepository) {
-        this.movieRepository = movieRepository;
-    }
+    private final MovieRepository movieRepository;
 
     public MovieResponse createMovie(MovieRequest movieRequest) {
         String validationError = isValidMovieForm(movieRequest);

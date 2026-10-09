@@ -14,6 +14,7 @@ import com.kodebutikken.kinoxp.repository.MovieRepository;
 import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import com.kodebutikken.kinoxp.repository.TheaterRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,17 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ShowingService {
+
     private final ShowingRepository showingRepository;
     private final MovieRepository movieRepository;
     private final TheaterRepository theaterRepository;
-
-    public ShowingService(ShowingRepository showingRepository, MovieRepository movieRepository,
-                          TheaterRepository theaterRepository) {
-        this.showingRepository = showingRepository;
-        this.movieRepository = movieRepository;
-        this.theaterRepository = theaterRepository;
-    }
 
     public List<ShowingResponse> getShowingsForMovie(Long movieId) {
         return showingRepository.findByMovieIdOrderByStartTimeAsc(movieId)
