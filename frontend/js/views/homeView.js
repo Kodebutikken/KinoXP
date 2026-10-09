@@ -5,7 +5,6 @@ import { navigate } from "../router.js";
 import { createPoster, posterHue, movieMeta, formatGenre, formatTime } from "../components/poster.js";
 
 const HERO_INTERVAL_MS = 7000;
-const MAX_PROGRAM_MOVIES = 25;
 const MAX_PROGRAM_DAYS = 7;
 
 export async function createHomeView() {
@@ -53,7 +52,7 @@ export async function createHomeView() {
 
 async function loadShowings(movies) {
     const results = await Promise.allSettled(
-        movies.slice(0, MAX_PROGRAM_MOVIES).map((movie) => fetchShowings(movie.id))
+        movies.map((movie) => fetchShowings(movie.id))
     );
 
     const now = new Date();
