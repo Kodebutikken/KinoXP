@@ -5,7 +5,6 @@ import com.kodebutikken.kinoxp.dto.MovieResponse;
 import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
-import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +14,9 @@ import java.util.List;
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
-    private final ShowingRepository showingRepository;
 
-    public MovieService(MovieRepository movieRepository, ShowingRepository showingRepository) {
+    public MovieService(MovieRepository movieRepository) {
         this.movieRepository = movieRepository;
-        this.showingRepository = showingRepository;
     }
 
     public MovieResponse createMovie(MovieRequest movieRequest) {
@@ -83,8 +80,7 @@ public class MovieService {
         if (movie.isActive()) {
             throw new IllegalArgumentException("Only inactive movies can be deleted");
         }
-        showingRepository.deleteByMovieId(id);
-        movieRepository.deleteById(id);
+        movieRepository.delete(movie);
     }
 
     public Movie changeMovieStatus(Long id, boolean active) {

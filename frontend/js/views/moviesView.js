@@ -295,7 +295,7 @@ export async function renderMoviesSection(container, { onEditMovie, refreshView 
                     if (refreshView) await refreshView();
                 } catch (error) {
                     console.error("Error toggling active state:", error);
-                    showToast("Could not change the status. Please try again.", "error");
+                    showToast(error.message, "error");
                 }
             });
             actionsCell.appendChild(toggleActiveButton);
@@ -313,7 +313,7 @@ export async function renderMoviesSection(container, { onEditMovie, refreshView 
                         row.remove();
                     } catch (error) {
                         console.error("Error while deleting the movie:", error);
-                        showToast("Could not delete the movie. Please try again.", "error");
+                        showToast(error.message, "error");
                     }
                 }
             });

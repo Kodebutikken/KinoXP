@@ -28,8 +28,8 @@ public class MovieController {
 
 
     @GetMapping ("/{id}")
-    public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
-        return ResponseEntity.ok(movieService.getMovieById(id));
+    public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
+        return ResponseEntity.ok(MovieResponse.from(movieService.getMovieById(id)));
     }
 
     @GetMapping ("/genres")
@@ -50,15 +50,15 @@ public class MovieController {
     }
 
     @PutMapping ("/{id}/edit")
-    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieRequest movieRequest) {
+    public ResponseEntity<MovieResponse> updateMovie(@PathVariable Long id, @Valid @RequestBody MovieRequest movieRequest) {
         Movie movie = movieService.updateMovie(id, movieRequest);
-        return ResponseEntity.ok(movie);
+        return ResponseEntity.ok(MovieResponse.from(movie));
     }
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Movie> changeMovieStatus(@PathVariable Long id, @RequestParam boolean active){
+    public ResponseEntity<MovieResponse> changeMovieStatus(@PathVariable Long id, @RequestParam boolean active){
             Movie movie = movieService.changeMovieStatus(id, active);
-            return ResponseEntity.ok(movie);
+            return ResponseEntity.ok(MovieResponse.from(movie));
     }
 }
 

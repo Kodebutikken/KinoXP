@@ -115,7 +115,7 @@ export async function createAdminView({ params }) {
                         await showSectionView();
                     } catch (error) {
                         console.error("Error while saving movie:", error);
-                        showToast("Could not save the movie. Please try again.", "error");
+                        showToast(error.message, "error");
                     }
                 },
                 onCancel: () => {
@@ -144,7 +144,7 @@ export async function createAdminView({ params }) {
                             showToast("The showing was updated.");
                         } else {
                             const createdShowing = await addShowing(showingData);
-                            showToast(`New showing created for ${createdShowing.movieTitle || "the movie"}.`);
+                            showToast(`New showing created for ${createdShowing.title}.`);
                         }
                         selectedShowingsMovieId = String(showingData.movieId);
                         await showSectionView();
