@@ -42,11 +42,11 @@ class ShowingServiceTest {
     private ShowingService showingService;
 
     private Movie movie(Long id, int durationMinutes) {
-        return new Movie(id, "Batman", durationMinutes, 0, "Ren action", MovieGenre.ACTION, null, true);
+        return new Movie(id, "Batman", durationMinutes, 0, "Ren action", MovieGenre.ACTION, null, true, new ArrayList<>());
     }
 
     private Theater theater(Long id) {
-        return new Theater(id, "Sal 1", 10, 15);
+        return new Theater(id, "Sal 1", 10, 15, new ArrayList<>());
     }
 
     @Test
@@ -236,7 +236,6 @@ class ShowingServiceTest {
         when(showingRepository.findById(showingId)).thenReturn(Optional.of(existingShowing));
         when(movieRepository.findById(movieId)).thenReturn(Optional.of(movie));
         when(theaterRepository.findById(theaterId)).thenReturn(Optional.of(theater));
-        when(showingRepository.existsByTheaterIdAndStartTime(theaterId, startTime)).thenReturn(false);
         when(showingRepository.save(existingShowing)).thenReturn(existingShowing);
 
         ShowingResponse response = showingService.updateShowing(showingId, request);
