@@ -6,7 +6,6 @@ import com.kodebutikken.kinoxp.exception.MovieNotFoundException;
 import com.kodebutikken.kinoxp.model.Movie;
 import com.kodebutikken.kinoxp.model.MovieGenre;
 import com.kodebutikken.kinoxp.repository.MovieRepository;
-import com.kodebutikken.kinoxp.repository.ShowingRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,9 +26,6 @@ class MovieServiceTest {
 
     @Mock
     private MovieRepository movieRepository;
-
-    @Mock
-    private ShowingRepository showingRepository;
 
     @InjectMocks
     private MovieService movieService;
@@ -158,8 +154,7 @@ class MovieServiceTest {
 
         movieService.deleteMovie(movieId);
 
-        verify(showingRepository).deleteByMovieId(movieId);
-        verify(movieRepository).deleteById(movieId);
+        verify(movieRepository).delete(movie);
     }
 
     @Test
@@ -172,8 +167,7 @@ class MovieServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> movieService.deleteMovie(movieId));
 
-        verify(showingRepository, never()).deleteByMovieId(any());
-        verify(movieRepository, never()).deleteById(any());
+        verify(movieRepository, never()).delete(any());
     }
 
     @Test
@@ -184,7 +178,7 @@ class MovieServiceTest {
 
         assertThrows(MovieNotFoundException.class, () -> movieService.deleteMovie(movieId));
 
-        verify(movieRepository, never()).deleteById(any());
+        verify(movieRepository, never()).delete(any());
     }
 
     //CHANGE STATUS
