@@ -2,7 +2,6 @@ package com.kodebutikken.kinoxp.controller;
 
 import com.kodebutikken.kinoxp.dto.ReservationRequest;
 import com.kodebutikken.kinoxp.dto.ReservationResponse;
-import com.kodebutikken.kinoxp.model.Reservation;
 import com.kodebutikken.kinoxp.service.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
