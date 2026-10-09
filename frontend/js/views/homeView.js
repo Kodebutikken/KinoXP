@@ -25,7 +25,7 @@ export async function createHomeView() {
 
     const activeMovies = (movies || []).filter((movie) => movie.active);
 
-    container.appendChild(createHero(activeMovies.slice(0, 3)));
+    container.appendChild(createHero(selectRandomMovies(activeMovies, 3)));
 
     if (activeMovies.length === 0) {
         const noMoviesNode = document.createElement("p");
@@ -49,6 +49,20 @@ export async function createHomeView() {
 }
 
 /* ---------- Data ---------- */
+
+function selectRandomMovies(movies, count) {
+    const shuffledMovies = [...movies];
+
+    for (let index = shuffledMovies.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffledMovies[index], shuffledMovies[randomIndex]] = [
+            shuffledMovies[randomIndex],
+            shuffledMovies[index],
+        ];
+    }
+
+    return shuffledMovies.slice(0, count);
+}
 
 async function loadShowings(movies) {
     const results = await Promise.allSettled(
@@ -77,14 +91,14 @@ function createHero(featuredMovies) {
     }
 
     const slides = featuredMovies.map(createHeroSlide);
-    slides[0].classList.add("active");
     hero.append(...slides);
 
     if (slides.length > 1) {
         const dots = document.createElement("div");
         dots.className = "home-hero-dots";
 
-        let current = 0;
+        let current = Math.floor(Math.random() * slides.length);
+        slides[current].classList.add("active");
         const show = (index) => {
             slides[current].classList.remove("active");
             dots.children[current].classList.remove("active");
@@ -101,7 +115,7 @@ function createHero(featuredMovies) {
             dot.addEventListener("click", () => show(index));
             dots.appendChild(dot);
         });
-        dots.firstElementChild.classList.add("active");
+        dots.children[current].classList.add("active");
         hero.appendChild(dots);
 
         // Stopper automatisk, når man navigerer væk fra forsiden
@@ -112,6 +126,8 @@ function createHero(featuredMovies) {
             }
             show((current + 1) % slides.length);
         }, HERO_INTERVAL_MS);
+    } else {
+        slides[0].classList.add("active");
     }
 
     return hero;
